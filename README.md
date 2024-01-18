@@ -1,21 +1,12 @@
-# D3A Algorithmic Fairness Hackathon
+# D3A Conference: Algorithmic Fairness Hackathon
 
 # Introduction
-slides uploaded (first 10 mins intro slides)
-text
-aim of the exercise
-fairness: group fairness and which groups are of interest
+The aim of the following exercise is to get some hands-on experience with implementing algorithmic fairness in a prediction model using a biomedical dataset. Your group will have four distinct tasks (see details below), and you will need to cleverly divide tasks to complete the exercise in time - you will have only 45 minutes! But you don't start from scratch, we have already prepared a dataset and some code to get you started. The key tasks are to assess predictive performance of models across population subgroups defined by protected attributes (sex and immigration status), and to mitigate any potential disparities that you observe.
 
 # Data
-description in words
-how to download R / Python
+For the hackathon we will use the *gusto* dataset which contains 40830 observations and xx variables. The dataset can be used to predict 30 day mortality (day30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the GUSTO-I trial data (insert hyperlink to reference paper).
 
-
-install.packages("predtools")
-library(predtools)
-df <- data(gusto)
-?gusto
-
+You can load data data by running the following code:
 
 
 Variable definitions:
@@ -63,6 +54,8 @@ define metrics (F1 / AUPRC)
 stratified metrics (output F1 / AUPRC for men vs women)
 
 # Fairness
+The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. 
+
 recap on confusion matrix
 fairness metrics: Equalized Odds and Predictive Rate Parity are two most relevant (but there are more)
 how to achieve fairness / mitigate bias
