@@ -67,11 +67,19 @@ lightgbmmodel <- boost_tree(
   set_engine("lightgbm", objective = "binary", metric = "binary_logloss") %>%
   set_mode("classification")
 
+# You can define you own models, see:
+# https://www.tidymodels.org/find/parsnip/
+# your_own_model <- xxxxx
 
 # Fit model
 healthworkflow <- workflow() %>%
   add_recipe(modelrecipe) %>%
   add_model(lightgbmmodel)
+
+# Fit your own model:
+# healthworkflow <- workflow() %>%
+#  add_recipe(modelrecipe) %>%
+#  add_model(your_own_model)
 
 # Cross-validation
 resamples <- vfold_cv(train, v = 3)
