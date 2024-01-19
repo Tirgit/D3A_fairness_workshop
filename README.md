@@ -6,45 +6,7 @@ The aim of the following exercise is to get some hands-on experience with implem
 # Data
 For the hackathon we will use the *gusto* dataset which contains 40,830 observations and 29 variables. The dataset can be used to predict 30 day mortality (DAY30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the [GUSTO-I trial data](https://pubmed.ncbi.nlm.nih.gov/7882472/).
 
-You can load data data by running the following code:
-df <- read_csv("../data/health_data.csv")
-
-The dataset contains the following variables:
-
-Variable name | Definition | Type
----|---|---
-DAY30 | The 30 Day mortality, the target variable | binary
-SHO | Shock: Killip class 3/4 vs. 1/2 | binary
-HIG | High risk: ANT or PMI | binary
-DIA | Diabetes | binary
-HYP | Hypotension: Systolic BP<100 mmHg | binary
-HRT | Heart rate: Pulse>80 bpm | binary
-TTR | Time to relief of chest pain > 1h | binary
-SEX | Sex (male=0, female=1) | factor
-KILLIP | Killip class (1–4): A measure for left ventricular function | factor
-AGE | Age in years | numeric (19-110)
-STE | Number of leads with ST elevation | numeric (0-11)
-PULSE | Pulse in beats per minute | numeric (0-246)
-SYSBP | Systolic blood pressure in mmHg | numeric (0-280)
-ANT | Anterior infarct location | binary
-MILOC | MI location: Anterior vs. Inferior vs. Other | factor
-HEIGHT | Height in cm | numeric (140-212.5)
-WEIGHT | Weight in kg | numeric (36-213)
-PMI | Previous myocardial infarction | binary
-HTN | Hypertension history | binary
-SMK | Smoking history: 1 = never; 2 = exsmoker; 3 = current smoker | factor
-PAN | Previous angina pectoris | binary
-FAM | Family history of MI | binary
-PREVCVD | Previous CVD | binary
-PREVCABG | Previous CABG | binary
-REGL | REGL protein | numeric (1-16)
-GRPL | GRPL protein | numeric (1-48)
-GRPS | GRPS protein | numeric (1-121)
-TPA | presence of TPA | binary
-TX | treatment group SK vs tPA vs SK+tPA | factor
-
-
-
+[More information about the data](data/Dataset.md)
 
 # Prediction
 slip train test

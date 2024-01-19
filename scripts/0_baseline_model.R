@@ -8,6 +8,11 @@
 ## ------------------------------------
 # Install list of libraries
 
+# Install all the libraries with pak
+# install.packages("pak")
+# pak::pkg_install(c("skimr", "tidyverse", "tidymodels", "rsample", "lightgbm", 
+# "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels))
+
 
 library(skimr)
 library(tidyverse)
@@ -18,6 +23,9 @@ library(parsnip)
 library(bonsai)
 library(tune)
 library(yardstick)
+library(DALEX)
+library(DALEXtra)
+library(fairmodels)
 
 # Seed for the baseline model
 seednr <- 02022024
@@ -26,15 +34,14 @@ set.seed(seednr)
 # Load data
 rawdata <- read_csv("../data/health_data.csv")
 
-# Check data
-skim(rawdata)
-
 ########### Pre-processing ################
 
 data <- rawdata %>%
   # change format of day30 as factor
   mutate(DAY30 = as.factor(DAY30))
 
+# Check data
+skim(data)
 
 # Split data into train and test
 split_data <- initial_split(data, prop = 0.70)
@@ -113,22 +120,19 @@ healthworkflow <- healthworkflow %>%
 
 # Fit model on test set
 last_fit <- last_fit(healthworkflow,
-  split = split_data
+  split = split_data,
+  metrics = metric_set(roc_auc, pr_auc, brier_class, f_meas, accuracy)
 )
 
 test_preds <- collect_predictions(last_fit)
 test_preds
 
 ################# Global metrics #####################
+# Confusion matrix
+conf_mat <- conf_mat(test_preds, truth = DAY30, .pred_class)
+conf_mat
 
-# Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
-roc_auc(test_preds, truth = DAY30, .pred_1)
-pr_auc(test_preds, truth = DAY30, .pred_1)
-brier_class(test_preds, truth = DAY30, .pred_1)
-
-accuracy(test_preds, truth = DAY30, .pred_class)
-f_meas(test_preds, truth = DAY30, .pred_class)
-
+collect_metrics(last_fit)
 
 # Plot ROC curve
 roc_curve <- roc_curve(test_preds, truth = DAY30, .pred_1)
@@ -143,7 +147,43 @@ autoplot(pr_curve) +
   labs(title = "PR curve") +
   theme_minimal()
 
+
+################# Metrics per group #####################
+# Merge predictions with test data
+groups_wit_preds <- test_preds %>%
+  bind_cols(test %>% select(-DAY30)) %>% 
+  group_by(SEX)
+
 # Confusion matrix
-conf_mat <- conf_mat(test_preds, truth = DAY30, .pred_class)
-conf_mat
+conf_mat <- conf_mat(groups_wit_preds, truth = DAY30, .pred_class)
+
+conf_mat$SEX[1]
+conf_mat$conf_mat[[1]]
+
+conf_mat$SEX[2]
+conf_mat$conf_mat[[2]]
+
+# Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
+roc_auc(groups_wit_preds, truth = DAY30, .pred_0)
+pr_auc(groups_wit_preds, truth = DAY30, .pred_1)
+brier_class(groups_wit_preds, truth = DAY30, .pred_1)
+
+accuracy(groups_wit_preds, truth = DAY30, .pred_class)
+f_meas(groups_wit_preds, truth = DAY30, .pred_class)
+
+
+############## FAIRMODELS #####################
+
+explainer <- explain_tidymodels(last_fit, data = test %>% select(-DAY30), y = test$DAY30, 
+                                label = "LightGBM", type = "classification")
+
+# Calculate fairness metrics
+# TODO FIX ERROR
+fobject <- fairness_check(explainer,
+                          protected = test$SEX, 
+                          privileged = "male",
+                          verbose = TRUE)
+
+# Plot fairness metrics
+autoplot(fobject)
 
