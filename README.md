@@ -4,7 +4,7 @@
 The aim of the following exercise is to get some hands-on experience with implementing algorithmic fairness in a prediction model using a biomedical dataset. Your group will have four distinct tasks (see details below), and you will need to cleverly divide tasks to complete the exercise in time - you will have only 45 minutes! But you don't start from scratch, we have already prepared a dataset and some code to get you started. The key tasks are to assess predictive performance of models across population subgroups defined by protected attributes (sex and immigration status), and to mitigate any potential disparities that you observe.
 
 # Data
-For the hackathon we will use the *gusto* dataset which contains 40830 observations and xx variables. The dataset can be used to predict 30 day mortality (day30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the [GUSTO-I trial data](https://pubmed.ncbi.nlm.nih.gov/7882472/).
+For the hackathon we will use the *gusto* dataset which contains 40,830 observations and 29 variables. The dataset can be used to predict 30 day mortality (DAY30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the [GUSTO-I trial data](https://pubmed.ncbi.nlm.nih.gov/7882472/).
 
 You can load data data by running the following code:
 df <- read_csv("../data/health_data.csv")
