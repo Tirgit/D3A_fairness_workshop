@@ -6,6 +6,7 @@
 ## Inspiration from https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels
 
 ## ------------------------------------
+# Install list of libraries
 
 
 library(skimr)
@@ -81,22 +82,23 @@ training_grid <- parameters(lightgbmmodel) %>%
   grid_random(size = 20)
 head(training_grid)
 
-# grid search
+
+# grid search, it takes some minutes
 tune_grid <- healthworkflow %>%
   tune_grid(
     resamples = resamples,
     grid = training_grid,
-    control = control_grid(verbose = FALSE),
-    metrics = metric_set(roc_auc, pr_auc, accuracy, brier_class),
-    control = control_grid(verbose = TRUE)
+    control = control_grid(verbose = TRUE),
+    metrics = metric_set(roc_auc, pr_auc, accuracy, brier_class)
   )
 
 # Show best models
 show_best(tune_grid, "pr_auc", n = 10)
 
-best_params <- select_best(tune_grid, "roc_auc")
+best_params <- select_best(tune_grid, "brier_class")
+best_params
 
-
+# Finalize workflow
 healthworkflow <- healthworkflow %>%
   finalize_workflow(best_params)
 
@@ -108,6 +110,31 @@ last_fit <- last_fit(healthworkflow,
 test_preds <- collect_predictions(last_fit)
 test_preds
 
-# TODO Fix this
-multi_metric <- metric_set(roc_auc, pr_auc, brier_class)
-multi_metric(test_preds, truth = DAY30, estimate = .pred_1)
+# Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
+roc_auc(test_preds, truth = DAY30, .pred_1)
+pr_auc(test_preds, truth = DAY30, .pred_1)
+brier_class(test_preds, truth = DAY30, .pred_1)
+
+accuracy(test_preds, truth = DAY30, .pred_class)
+f_meas(test_preds, truth = DAY30, .pred_class)
+
+
+# Plot ROC curve
+roc_curve <- roc_curve(test_preds, truth = DAY30, .pred_1)
+autoplot(roc_curve) +
+  labs(title = "ROC curve") +
+  theme_minimal()
+
+# Plot PR curve
+pr_curve <- pr_curve(test_preds, truth = DAY30, .pred_1)
+
+autoplot(pr_curve) +
+  labs(title = "PR curve") +
+  theme_minimal()
+
+
+# Confusion matrix
+conf_mat <- conf_mat(test_preds, truth = DAY30, .pred_class)
+conf_mat
+
+
