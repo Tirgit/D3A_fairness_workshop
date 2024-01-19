@@ -4,44 +4,44 @@
 The aim of the following exercise is to get some hands-on experience with implementing algorithmic fairness in a prediction model using a biomedical dataset. Your group will have four distinct tasks (see details below), and you will need to cleverly divide tasks to complete the exercise in time - you will have only 45 minutes! But you don't start from scratch, we have already prepared a dataset and some code to get you started. The key tasks are to assess predictive performance of models across population subgroups defined by protected attributes (sex and immigration status), and to mitigate any potential disparities that you observe.
 
 # Data
-For the hackathon we will use the *gusto* dataset which contains 40830 observations and xx variables. The dataset can be used to predict 30 day mortality (day30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the GUSTO-I trial data (insert hyperlink to reference paper).
+For the hackathon we will use the *gusto* dataset which contains 40830 observations and xx variables. The dataset can be used to predict 30 day mortality (day30) in patients who have suffered from an acute myocardial infarction. The data set consists of a subset of the [GUSTO-I trial data][https://pubmed.ncbi.nlm.nih.gov/7882472/].
 
 You can load data data by running the following code:
+df <- read_csv("../data/health_data.csv")
 
+The dataset contains the following variables:
 
-Variable definitions:
-
-Variable name | Definition | Value
+Variable name | Definition | Type
 ---|---|---
-day30 | The 30 Day mortality, the target variable | 0/1
-sho | Shock: Killip class 3/4 vs. 1/2 | 0/1
-hig | High risk: ANT or PMI | 0/1
-dia | Diabetes | 0/1
-hyp | Hypotension: Systolic BP<100 mmHg | 0/1
-hrt | Heart rate: Pulse>80 bpm | 0/1
-ttr | Time to relief of chest pain > 1h | 0/1
-sex | Sex (male=0, female=1) | 0/1
-Killip | Killip class (1–4): A measure for left ventricular function | 1/2/3/4
-age | Age in years | 0-100
-ste | Number of leads with ST elevation | 0/1/2/3/4/5/6/7/8/9/10/11/12
-pulse | Pulse in beats per minute | 0-200
-sysbp | Systolic blood pressure in mmHg | 0-200
-ant | Anterior infarct location | 0/1
-miloc | MI location: Anterior vs. Inferior vs. Other | 1/2/3
-height | Height in cm | 0-200
-weight | Weight in kg | 0-200
-pmi | Previous myocardial infarction | 0/1
-htn | Hypertension history | 0/1
-smk | Smoking history: 1 = never; 2 = exsmoker; 3 = current smoker | 1/2/3
-pan | Previous angina pectoris | 0/1
-fam | Family history of MI | 0/1
-prevcvd | Previous CVD | 0/1
-prevcabg | Previous CABG | 0/1
-regl | xxx | xxx
-grpl | xxx | xxx
-grps | xxx | xxx
-tpa | xxx | xxx
-tx | treatment group | 1/2/3
+DAY30 | The 30 Day mortality, the target variable | binary
+SHO | Shock: Killip class 3/4 vs. 1/2 | binary
+HIG | High risk: ANT or PMI | binary
+DIA | Diabetes | binary
+HYP | Hypotension: Systolic BP<100 mmHg | binary
+HRT | Heart rate: Pulse>80 bpm | binary
+TTR | Time to relief of chest pain > 1h | binary
+SEX | Sex (male=0, female=1) | factor
+KILLIP | Killip class (1–4): A measure for left ventricular function | factor
+AGE | Age in years | numeric (19-110)
+STE | Number of leads with ST elevation | numeric (0-11)
+PULSE | Pulse in beats per minute | numeric (0-246)
+SYSBP | Systolic blood pressure in mmHg | numeric (0-280)
+ANT | Anterior infarct location | binary
+MILOC | MI location: Anterior vs. Inferior vs. Other | factor
+HEIGHT | Height in cm | numeric (140-212.5)
+WEIGHT | Weight in kg | numeric (36-213)
+PMI | Previous myocardial infarction | binary
+HTN | Hypertension history | binary
+SMK | Smoking history: 1 = never; 2 = exsmoker; 3 = current smoker | factor
+PAN | Previous angina pectoris | binary
+FAM | Family history of MI | binary
+PREVCVD | Previous CVD | binary
+PREVCABG | Previous CABG | binary
+REGL | REGL protein | numeric (1-16)
+GRPL | GRPL protein | numeric (1-48)
+GRPS | GRPS protein | numeric (1-121)
+TPA | presence of TPA | binary
+TX | treatment group SK vs tPA vs SK+tPA | factor
 
 
 
@@ -70,6 +70,10 @@ https://journal.r-project.org/articles/RJ-2022-019/
 2. Improve the model: Pre-processing
 3. Improve the model: Optimization
 4. Improve the model: Post-processing
+
+Upload results to:
+https://docs.google.com/presentation/d/1D2Fc44sKXB3b5-tT3yvADzPGcQFUQ4AcVz6VDRiw15U/edit?usp=sharing
+
 
 # Discussion
 upload results to : xxxxxx google slides
