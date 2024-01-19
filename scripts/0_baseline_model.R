@@ -29,7 +29,6 @@ rawdata <- read_csv("../data/health_data.csv")
 # Check data
 skim(rawdata)
 
-
 ########### Pre-processing ################
 
 data <- rawdata %>%
@@ -68,9 +67,11 @@ lightgbmmodel <- boost_tree(
   set_mode("classification")
 
 
+
 # Fit model
 healthworkflow <- workflow() %>%
   add_recipe(modelrecipe) %>%
+  # This model can be changed to any other model
   add_model(lightgbmmodel)
 
 # Cross-validation
@@ -110,6 +111,8 @@ last_fit <- last_fit(healthworkflow,
 test_preds <- collect_predictions(last_fit)
 test_preds
 
+################# Global metrics #####################
+
 # Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
 roc_auc(test_preds, truth = DAY30, .pred_1)
 pr_auc(test_preds, truth = DAY30, .pred_1)
@@ -132,9 +135,7 @@ autoplot(pr_curve) +
   labs(title = "PR curve") +
   theme_minimal()
 
-
 # Confusion matrix
 conf_mat <- conf_mat(test_preds, truth = DAY30, .pred_class)
 conf_mat
-
 
