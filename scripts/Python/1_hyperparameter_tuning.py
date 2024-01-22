@@ -3,6 +3,7 @@
 ## Author: Adrian G. Zucco and Tibor V. Varga
 ## Date Created: 2024-01-22
 ## Notes:
+## Inspired from https://dalex.drwhy.ai/python-dalex-new.html
 
 # %%
 # Import libraries
@@ -13,16 +14,12 @@ import seaborn as sns
 
 # Import sklearn libraries
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 
 # Import metrics
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import RandomizedSearchCV
 
 # Import models
-from sklearn.linear_model import LogisticRegression
 import lightgbm as lgb
 
 # Import dalex libraries
@@ -79,7 +76,7 @@ lgbm_hyper = lgb.LGBMClassifier(**params)
 
 # Instantiate the random search model
 random_search = RandomizedSearchCV(estimator=lgbm_hyper, param_distributions=hyperparameter_grid, 
-                                   n_iter=20, cv=3, n_jobs=-1, verbose=2, scoring='f1')
+                                   n_iter=5, cv=3, n_jobs=-1, verbose=2, scoring='f1')
 
 # Fit the random search to the data
 random_search.fit(X_train, y_train)
@@ -105,7 +102,9 @@ y_pred = np.where(y_pred > 0.5, 1, 0)
 cm = confusion_matrix(y_test, y_pred)
 print(cm)
 
-# %%
+print(classification_report(y_test, y_pred))
+
+# %% Run Dalex explainer
 exp_gbm = dx.Explainer(lgbm_model, data=X_test, y=y_test, 
                        label='gbm', 
                        model_type='classification',

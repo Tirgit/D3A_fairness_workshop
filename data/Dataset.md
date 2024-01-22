@@ -6,7 +6,6 @@ The dataset for this project is from GUSTO-I trial:
 
 The data has been downloaded from the publicly available repository of the [predtools R package](https://github.com/resplab/predtools/tree/master/data). We have transformed the data into a CSV file for easier use.
 
-
 The dataset contains the following variables:
 
 Variable name | Definition | Type
@@ -38,5 +37,4 @@ PREVCABG | Previous CABG | binary
 REGL | REGL protein | numeric (1-16)
 GRPL | GRPL protein | numeric (1-48)
 GRPS | GRPS protein | numeric (1-121)
-TPA | presence of TPA | binary
 TX | treatment group SK vs tPA vs SK+tPA | factor

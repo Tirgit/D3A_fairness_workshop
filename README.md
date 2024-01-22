@@ -8,6 +8,28 @@ For the hackathon we will use the [GUSTO-I trial data](https://pubmed.ncbi.nlm.n
 
 [Detailed information about the data here](data/Dataset.md)
 
+## Setting up your environment
+
+### Python users
+
+Instructions to create a conda environment are in the [conda environment file](scripts/Python/hackathon_env.yml) and necessary packages in the `pip` [requirements file](scripts/Python/requirements.txt). You can create the environment with the necessary packages executing the following commands in your terminal (assuming you are at the root directory of this repository):
+
+```bash
+  conda env create -f ./scripts/Python/hackathon_env.yml
+  conda activate hackathon_env
+  pip install -r ./scripts/Python/requirements.txt
+```
+
+Execution of the Python scripts, cell by cell, has been tested in [Visual Studio Code](https://code.visualstudio.com/)
+
+### R users
+
+To work with your current installation of R (and Rstudio), uncomment the first lines in the scripts to install the necessary packages. We suggest to install the [pak library](https://pak.r-lib.org/) first to manage the installation of the other packages. You can install it with the following command:
+
+```R
+install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
+```
+
 ## Prediction
 slip train test
 define a ML for predicting outcome (binary classification)
@@ -44,10 +66,4 @@ results from performance metrics and fairness metrics
 ## How to cite
 
 TODO: Generate Zenodo DOI for this workshop
-
-
-
-
-
-
 

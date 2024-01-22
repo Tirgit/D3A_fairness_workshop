@@ -10,7 +10,7 @@
 # Install list of libraries
 
 # Install all the libraries with pak
-# install.packages("pak")
+# install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
 # pak::pkg_install(c("pROC", "tidyverse", "tidymodels", "ggplot2", "fairmodels", 
 # "parsnip", "DALEX", "tune", "yardstick", "DALEX", "DALEXtra"))
 

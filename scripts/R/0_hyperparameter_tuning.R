@@ -9,9 +9,9 @@
 # Install list of libraries
 
 # Install all the libraries with pak
-# install.packages("pak")
-# pak::pkg_install(c("skimr", "tidyverse", "tidymodels", "rsample", "lightgbm", 
-# "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels,
+# install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
+# pak::pkg_install(c("skimr", "tidyverse", "tidymodels", "rsample", "lightgbm",
+# "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels",
 # "ggplot2", "pROC"))
 
 # Load libraries

@@ -1,0 +1,11 @@
+name: hackathon_env
+channels:
+  - anaconda
+  - defaults
+dependencies:
+  - python==3.11
+  - pip
+  - llvm
+  - libgcc
+  - gcc_linux-64
+  - gxx_linux-64

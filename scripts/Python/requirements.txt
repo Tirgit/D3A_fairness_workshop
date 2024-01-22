@@ -1,0 +1,10 @@
+pyarrow
+ipykernel
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+lightgbm
+dalex
+nbformat

@@ -3,6 +3,7 @@
 ## Author: Adrian G. Zucco and Tibor V. Varga
 ## Date Created: 2024-01-22
 ## Notes:
+## Inspired from https://dalex.drwhy.ai/python-dalex-fairness.html
 
 # %%
 # Import libraries
@@ -81,8 +82,7 @@ print(cm)
 
 print(classification_report(y_test, y_pred))
 
-
-# %%
+# %% Run Dalex explainer
 exp_glm = dx.Explainer(glm_model, data=X_test, y=y_test, 
                        label='glm', 
                        model_type='classification',
@@ -99,3 +99,5 @@ fobject_glm.fairness_check(epsilon = 0.8)
 
 # %%
 fobject_glm.plot()
+
+# %%
