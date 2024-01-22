@@ -1,26 +1,31 @@
-# DEMONSTRATION: FAIRNESS EXPLORATION
+## Description: This script is used to create a baseline GLM model for the health data.
+##
+## Author: Adrian G. Zucco and Tibor V. Varga
+## Date Created: 2024-01-18
+## Notes:
+## Inspiration from: https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels
+## Fairness tutorial: https://cran.r-project.org/web/packages/fairmodels/vignettes/Advanced_tutorial.html
 
-# you only need to install packages once
-install.packages("caret")
-install.packages("pROC")
-install.packages("ggplot2")
-install.packages("fairness")
-install.packages("fairmodels")
-install.packages("DALEX")
-install.packages("ranger")
-install.packages("gbm")
-install.packages("nnet")
+## ------------------------------------
+# Install list of libraries
 
-# you need to load libraries each time you start R
+# Install all the libraries with pak
+# install.packages("pak")
+# pak::pkg_install(c("pROC", "tidyverse", "tidymodels", "ggplot2", "fairmodels", 
+# "parsnip", "DALEX", "tune", "yardstick", "DALEX", "DALEXtra"))
+
+# Load libraries
+library(pROC)
+library(tidyverse)
 library(tidymodels)
+library(parsnip)
+library(tune)
+library(yardstick)
+library(DALEX)
+library(DALEXtra)
+library(fairmodels)
 library(pROC)
 library(ggplot2)
-library(fairness) # both fairness packages have a compas dataset!
-library(fairmodels) # both fairness packages have a compas dataset!
-library(DALEX)
-library(ranger)
-library(gbm)
-library(nnet)
 
 
 ####################################################################
@@ -88,14 +93,20 @@ y_training <- as.numeric(training$DAY30) -1
 y_testing <- as.numeric(testing$DAY30) -1
 
 # FAIRNESS CHECK
-explainer_lm <- explain(glm.model, data = testing[,-1], y = y_testing)
+explainer_lm <- explain(model_fit, data = testing[,-1], y = y_testing)
 fobject <- fairness_check(explainer_lm,
                           protected = testing$SEX,
                           privileged = "male",
                           epsilon = 0.8)
 
+# BASIC METRICS
+model_performance(explainer_lm)
+
 # CHECK IF FAIRNESS CHECK PASSED FOR 5 SELECTED METRICS
 fobject
+
+# NUMERIC FAIRNESS METRICS
+fobject$groups_data$workflow
 
 # VISUALIZE FAIRNESS CHECK
 # FIRST, RAW METRICS
@@ -103,80 +114,8 @@ plot(metric_scores(fobject))
 # THEN, RELATIVE METRICS
 plot(fobject)
 
-# NUMERIC OUTPUT
-fobject$groups_data$train.formula$ACC
-fobject$groups_data$train.formula$TPR
-
 # PROBABILITIES
 plot_density(fobject)
-
-# ADD ANOTHER ALGORITHM TO THE PIPELINE
-rf_model     <- ranger(Risk ~., data = german, probability = TRUE)
-explainer_rf <- explain(rf_model, data = testing[,-1], y = y_testing)
-fobject      <- fairness_check(explainer_rf, fobject)
-
-# VISUALIZE BOTH ALGORITHMS
-# FIRST, RAW METRICS
-plot(metric_scores(fobject))
-# THEN, RELATIVE METRICS
-plot(fobject)
-
-# NUMERIC OUTPUT
-fobject$groups_confusion_matrices
-fobject$groups_data$train.formula$ACC
-fobject$groups_data$train.formula$TPR
-
-
-####################################################################
-####################################################################
-###################### FAIRMODELS R PACKAGE ########################
-################## LARGE SCALE METRIC COMPARISON ###################
-####################################################################
-####################################################################
-
-# load COMPAS data
-compas <- fairmodels::compas
-?compas
-
-# making sure outcome is 0 / 1
-two_yr_recidivism <- factor(compas$Two_yr_Recidivism, levels = c(1,0))
-y_numeric <- as.numeric(two_yr_recidivism) -1
-compas$Two_yr_Recidivism <- two_yr_recidivism
-
-df <- compas
-df$Two_yr_Recidivism <- as.numeric(two_yr_recidivism) -1
-
-
-# FITTING THREE ALGORITHMS
-set.seed(4328)
-gbm_model <- gbm(Two_yr_Recidivism ~., data = df)
-
-lm_model <- glm(Two_yr_Recidivism~.,
-                data=compas,
-                family=binomial(link="logit"))
-
-rf_model <- ranger(Two_yr_Recidivism ~.,
-                   data = compas,
-                   probability = TRUE)
-
-# EXPLAINER
-explainer_lm  <- explain(lm_model, data = compas[,-1], y = y_numeric)
-explainer_rf  <- explain(rf_model, data = compas[,-1], y = y_numeric)
-explainer_gbm <- explain(gbm_model, data = compas[,-1], y = y_numeric)
-
-# FAIRNESS GRAPHS
-fobject <- fairness_check(explainer_lm, explainer_rf, explainer_gbm,
-                          protected = compas$Ethnicity,
-                          privileged = "Caucasian")
-
-# FAIRNESS HEATMAP
-plot(fairness_heatmap(fobject))
-
-# FAIRNESS RADAR
-plot(fairness_radar(fobject))
-
-# CHOSEN METRIC
-plot(group_metric(fobject))
 
 
 ####################################################################

@@ -1,4 +1,4 @@
-## Description: This script is used to create a baseline model for the health data.
+## Description: This script is used to create a LightGBM model with hyperparameter tuning for the health data.
 ##
 ## Author: Adrian G. Zucco and Tibor V. Varga
 ## Date Created: 2024-01-18
@@ -11,9 +11,10 @@
 # Install all the libraries with pak
 # install.packages("pak")
 # pak::pkg_install(c("skimr", "tidyverse", "tidymodels", "rsample", "lightgbm", 
-# "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels))
+# "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels,
+# "ggplot2", "pROC"))
 
-
+# Load libraries
 library(skimr)
 library(tidyverse)
 library(tidymodels)
@@ -38,9 +39,12 @@ rawdata <- read_csv("../../data/health_data.csv")
 
 ########### Pre-processing ################
 
+# convert DAY30 to factor
+rawdata$DAY30 <- factor(rawdata$DAY30, levels = c(0, 1), labels = c("no", "yes"))
+
+# convert all character variables to factors
 data <- rawdata %>%
-  # change format of day30 as factor
-  mutate(DAY30 = as.factor(DAY30))
+  mutate_if(is.character, as.factor)
 
 # Check data
 skim(data)
@@ -49,7 +53,6 @@ skim(data)
 split_data <- initial_split(data, prop = 0.70, strata = DAY30)
 train <- training(split_data)
 test <- testing(split_data)
-
 
 # Data processing recipe
 modelrecipe <- recipe(DAY30 ~ ., data = train) %>%
@@ -178,8 +181,19 @@ f_meas(groups_wit_preds, truth = DAY30, .pred_class)
 
 ############## FAIRMODELS #####################
 
-explainer <- explain_tidymodels(last_fit, data = test %>% select(-DAY30), y = test$DAY30, 
+# define outcome (outcome set to 0 and 1, it needs to be numeric)
+y_training <- as.numeric(train$DAY30) -1
+y_testing <- as.numeric(test$DAY30) -1
+
+# CONSTRUCT EXPLAINER
+explainer <- explain_tidymodels(last_fit$.workflow, data = test %>% select(-DAY30), y = y_testing, 
                                 label = "LightGBM", type = "classification")
+
+# FAIRNESS CHECK
+fobject <- fairness_check(explainer_lm,
+                          protected = test$SEX,
+                          privileged = "male",
+                          epsilon = 0.8)
 
 # Calculate fairness metrics
 # TODO FIX ERROR
