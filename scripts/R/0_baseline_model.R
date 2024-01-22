@@ -32,7 +32,7 @@ seednr <- 02022024
 set.seed(seednr)
 
 # Load data
-rawdata <- read_csv("../data/health_data.csv")
+rawdata <- read_csv("../../data/health_data.csv")
 
 ########### Pre-processing ################
 
