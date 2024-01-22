@@ -25,46 +25,29 @@ library(nnet)
 
 ####################################################################
 ####################################################################
-################## COMPAS - GROUP FAIRNESS #########################
+##################### INITIAL PREDICTIONS ##########################
 ####################################################################
 ####################################################################
 
-# COMPAS data
-compas <- fairness::compas # explicitly define compas data from "fairness" package
+# loading data
+rawdata <- read_csv("../../data/health_data.csv")
 
-# CHECK DATASET INFO
-?fairness::compas
-str(compas)
-compas <- compas[-c(8,9)]
+rawdata$DAY30 <- factor(rawdata$DAY30, levels = c(0, 1), labels = c("no", "yes"))
 
-# DATA OBSERVATION & VISUALIZATION
-summary(compas$Two_yr_Recidivism)
-table(compas$Two_yr_Recidivism, compas$ethnicity)
-
-# I remove Asian, Native American and Other due to very low numbers
-compas <- compas[compas$ethnicity == "Caucasian" | 
-                   compas$ethnicity == "African_American" |
-                   compas$ethnicity == "Hispanic", ]
-compas$ethnicity <- droplevels(compas$ethnicity)
-
-table(compas$Two_yr_Recidivism, compas$ethnicity)
-table(compas$Two_yr_Recidivism, compas$Female)
-table(compas$Two_yr_Recidivism, compas$Misdemeanor)
-
-ggplot(data=compas,aes(x=Two_yr_Recidivism, y=Number_of_Priors,color=Two_yr_Recidivism)) + geom_boxplot() +theme_minimal()+
-  theme(legend.position="none")
+data <- rawdata %>%
+  mutate_if(is.character, as.factor)
 
 # DATA PARTITIONING
 set.seed(23456)
-inTraining <- createDataPartition(compas$Two_yr_Recidivism, p = .75, list = FALSE)
-training <- compas[ inTraining,]
-testing  <- compas[-inTraining,]
+inTraining <- createDataPartition(data$DAY30, p = .75, list = FALSE)
+training <- data[ inTraining,]
+testing  <- data[-inTraining,]
 
 # FIT PREDICTION MODEL WITH ETHNICITY AND SEX
 fitControl <- trainControl(classProbs = TRUE, 
                            summaryFunction = twoClassSummary)
 # note that this is a full model including all variables
-glm.model <- train(Two_yr_Recidivism ~ ., 
+glm.model <- train(DAY30 ~ ., 
                    training,
                    method="glm",
                    trControl = fitControl,
@@ -75,41 +58,16 @@ glm.model
 result.predicted.prob <- predict(glm.model, testing, type="prob")
 
 # Draw ROC curve
-result.roc <- roc(testing$Two_yr_Recidivism, result.predicted.prob$yes) 
+result.roc <- roc(testing$DAY30, result.predicted.prob$yes) 
 
 ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
   theme_minimal() + 
   ggtitle("ROC curve - logistic regression") + 
   geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
 
-result.roc
-
-# FIT PREDICTION MODEL WITHOUT ETHNICITY AND SEX
-# TRAIN & TEST, USING LOGISTIC REGRESSION
-fitControl <- trainControl(classProbs = TRUE, 
-                           summaryFunction = twoClassSummary)
-# note that the model is defined and does not include ethnicity and sex
-glm.model <- train(Two_yr_Recidivism ~ Number_of_Priors + Age_Above_FourtyFive +
-                     Age_Below_TwentyFive + Misdemeanor, 
-                   training,
-                   method="glm",
-                   trControl = fitControl,
-                   metric="ROC")
-glm.model
-
-# predict on test set
-result.predicted.prob <- predict(glm.model, testing, type="prob")
-
-# Draw ROC curve
-result.roc <- roc(testing$Two_yr_Recidivism, result.predicted.prob$yes) 
-plot(result.roc, print.thres="best", print.thres.best.method="closest.topleft")
-
-ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
-  theme_minimal() + 
-  ggtitle("ROC curve - logistic regression") + 
-  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
-
-result.roc
+predictions <- predict(glm.model, newdata = testing)
+conf_matrix <- confusionMatrix(predictions, testing$DAY30)
+conf_matrix
 
 
 ####################################################################
@@ -119,51 +77,14 @@ result.roc
 ####################################################################
 ####################################################################
 
-# https://modeloriented.github.io/fairmodels/
-# https://medium.com/@ModelOriented/fairmodels-lets-fight-with-biased-machine-learning-models-part-1-detection-6c2786e6c97c
-# https://towardsdatascience.com/fairmodels-lets-fight-with-biased-machine-learning-models-part-2-visualization-66558630a4d
-
-german <- fairmodels::german
-?german
-
-# DATA PARTITIONING
-set.seed(8201)
-inTraining <- createDataPartition(german$Risk, p = .75, list = FALSE)
-training <- german[ inTraining,]
-testing  <- german[-inTraining,]
-
-# define outcome (credit risk set to 0 and 1)
-y_training <- as.numeric(training$Risk) -1
-y_testing <- as.numeric(testing$Risk) -1
-
-# train model
-# FIT PREDICTION MODEL WITH ETHNICITY AND SEX
-fitControl <- trainControl(classProbs = TRUE, 
-                           summaryFunction = twoClassSummary)
-# note that this is a full model including all variables
-glm.model <- train(Risk ~ ., 
-                   training,
-                   method="glm",
-                   trControl = fitControl,
-                   metric="ROC")
-
-# predict on test set
-result.predicted.prob <- predict(glm.model, testing, type="prob")
-
-# Draw ROC curve
-result.roc <- roc(testing$Risk, result.predicted.prob$good) 
-
-ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
-  theme_minimal() + 
-  ggtitle("ROC curve - logistic regression") + 
-  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
-
-result.roc
+# define outcome (outcome set to 0 and 1, it needs to be numeric)
+y_training <- as.numeric(training$DAY30) -1
+y_testing <- as.numeric(testing$DAY30) -1
 
 # FAIRNESS CHECK
 explainer_lm <- explain(glm.model, data = testing[,-1], y = y_testing)
 fobject <- fairness_check(explainer_lm,
-                          protected = testing$Sex,
+                          protected = testing$SEX,
                           privileged = "male",
                           epsilon = 0.8)
 
