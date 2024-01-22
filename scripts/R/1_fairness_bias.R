@@ -12,7 +12,7 @@ install.packages("gbm")
 install.packages("nnet")
 
 # you need to load libraries each time you start R
-library(caret)
+library(tidymodels)
 library(pROC)
 library(ggplot2)
 library(fairness) # both fairness packages have a compas dataset!
@@ -29,45 +29,51 @@ library(nnet)
 ####################################################################
 ####################################################################
 
-# loading data
+# LOAD DATA
 rawdata <- read_csv("../../data/health_data.csv")
 
+# convert DAY30 to factor
 rawdata$DAY30 <- factor(rawdata$DAY30, levels = c(0, 1), labels = c("no", "yes"))
 
+# convert all character variables to factors
 data <- rawdata %>%
   mutate_if(is.character, as.factor)
 
 # DATA PARTITIONING
 set.seed(23456)
-inTraining <- createDataPartition(data$DAY30, p = .75, list = FALSE)
-training <- data[ inTraining,]
-testing  <- data[-inTraining,]
+split_data <- initial_split(data, prop = 0.70, strata = DAY30)
+training <- training(split_data)
+testing <- testing(split_data)
 
-# FIT PREDICTION MODEL WITH ETHNICITY AND SEX
-fitControl <- trainControl(classProbs = TRUE, 
-                           summaryFunction = twoClassSummary)
-# note that this is a full model including all variables
-glm.model <- train(DAY30 ~ ., 
-                   training,
-                   method="glm",
-                   trControl = fitControl,
-                   metric="ROC")
-glm.model
+# DEFINE LOGISTIC REGRESSION MODEL
+model <- logistic_reg() |> 
+  set_engine("glm")
 
-# predict on test set
-result.predicted.prob <- predict(glm.model, testing, type="prob")
+# DEFINE RECIPE
+rec <- recipe(DAY30 ~ ., data = training)
 
-# Draw ROC curve
-result.roc <- roc(testing$DAY30, result.predicted.prob$yes) 
+# DEFINE WORKFLOW
+wkflow <- workflow() |> 
+  add_model(model) |> 
+  add_recipe(rec)
 
+# TRAINING MODEL
+model_fit <- wkflow |> 
+  fit(data = training)
+
+# ASSESS MODEL ON TEST DATA
+preds <- model_fit |> 
+  augment(new_data = testing)
+
+# DRAW ROC CURVE
+result.roc <- roc(testing$DAY30, preds$.pred_yes) 
 ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
   theme_minimal() + 
   ggtitle("ROC curve - logistic regression") + 
   geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
 
-predictions <- predict(glm.model, newdata = testing)
-conf_matrix <- confusionMatrix(predictions, testing$DAY30)
-conf_matrix
+# CONFUSION MATRIX
+conf_mat(preds, truth = DAY30, estimate = .pred_class)
 
 
 ####################################################################

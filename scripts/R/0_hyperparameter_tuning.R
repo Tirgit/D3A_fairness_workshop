@@ -26,6 +26,8 @@ library(yardstick)
 library(DALEX)
 library(DALEXtra)
 library(fairmodels)
+library(pROC)
+library(ggplot2)
 
 # Seed for the baseline model
 seednr <- 02022024
@@ -44,7 +46,7 @@ data <- rawdata %>%
 skim(data)
 
 # Split data into train and test
-split_data <- initial_split(data, prop = 0.70)
+split_data <- initial_split(data, prop = 0.70, strata = DAY30)
 train <- training(split_data)
 test <- testing(split_data)
 
@@ -135,10 +137,12 @@ conf_mat
 collect_metrics(last_fit)
 
 # Plot ROC curve
-roc_curve <- roc_curve(test_preds, truth = DAY30, .pred_1)
-autoplot(roc_curve) +
-  labs(title = "ROC curve") +
-  theme_minimal()
+result.roc <- roc(test$DAY30, test_preds$.pred_1) 
+ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
+  theme_minimal() + 
+  ggtitle("ROC curve - logistic regression") + 
+  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
+
 
 # Plot PR curve
 pr_curve <- pr_curve(test_preds, truth = DAY30, .pred_1)
