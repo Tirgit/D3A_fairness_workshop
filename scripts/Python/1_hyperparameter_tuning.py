@@ -18,7 +18,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 # Import metrics
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.model_selection import RandomizedSearchCV
 
 # Import models
 from sklearn.linear_model import LogisticRegression
@@ -28,8 +29,7 @@ import lightgbm as lgb
 import dalex as dx
 
 # set random seed
-np.random.seed(123)
-
+np.random.seed(2022024)
 
 # %% Import data
 data = pd.read_csv('../../data/health_data.csv')
@@ -48,30 +48,51 @@ y = data.DAY30
 # %% Split data into train and test 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.7, stratify=y)
 
+# Create dataset
+train_data = lgb.Dataset(X_train, label=y_train)
+
 
 # %% ############################## Fit LightGBM model
-# Parameters
+# Basic parameters
 params = {
     'objective': 'binary',
     'metric': 'binary_logloss',
     'is_unbalance': 'true',
     'boosting': 'gbdt',
-    'num_leaves': 31,
-    'feature_fraction': 0.5,
-    'bagging_fraction': 0.75,
-    'bagging_freq': 20,
-    'learning_rate': 0.05,
     'verbose': 1
 }
 
-# %% Set hyperparameter tuning
+# %% Set Random grid search
+hyperparameter_grid = {
+    'num_leaves': [10, 20, 30, 40],
+    'feature_fraction': [0.1, 0.2, 0.3, 0.4, 0.5],
+    'bagging_fraction': [0.1, 0.2, 0.3, 0.4, 0.5],
+    'max_depth': [5, 10, 15, 20],
+    'learning_rate': [0.01, 0.1, 1],
+    'min_data_in_leaf': [10, 20, 30, 40, 50],
+    'lambda_l1': [0, 0.1, 0.2, 0.3, 0.4, 0.5],
+    'lambda_l2': [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+}
 
+# Create a based model
+lgbm_hyper = lgb.LGBMClassifier(**params)
+
+# Instantiate the random search model
+random_search = RandomizedSearchCV(estimator=lgbm_hyper, param_distributions=hyperparameter_grid, 
+                                   n_iter=20, cv=3, n_jobs=-1, verbose=2, scoring='f1')
+
+# Fit the random search to the data
+random_search.fit(X_train, y_train)
+
+# Get the best parameters
+best_params = random_search.best_params_
+best_params
 
 # %%
-# Create dataset
-train_data = lgb.Dataset(X_train, label=y_train)
+# Combine best parameters with fixed parameters
+params.update(best_params)
 
-# Train model
+# Train final model
 lgbm_model = lgb.train(params, train_data, 200)
 
 # %% Predict on test data
