@@ -140,7 +140,7 @@ conf_mat
 collect_metrics(last_fit)
 
 # Plot ROC curve
-result.roc <- roc(test$DAY30, test_preds$.pred_1) 
+result.roc <- roc(test$DAY30, test_preds$.pred_no) 
 ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) + 
   theme_minimal() + 
   ggtitle("ROC curve - logistic regression") + 
@@ -148,7 +148,7 @@ ggroc(result.roc, alpha = 0.5, colour = "red", linetype = 1, size = 1) +
 
 
 # Plot PR curve
-pr_curve <- pr_curve(test_preds, truth = DAY30, .pred_1)
+pr_curve <- pr_curve(test_preds, truth = DAY30, .pred_yes)
 
 autoplot(pr_curve) +
   labs(title = "PR curve") +
@@ -171,10 +171,9 @@ conf_mat$SEX[2]
 conf_mat$conf_mat[[2]]
 
 # Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
-roc_auc(groups_wit_preds, truth = DAY30, .pred_0)
-pr_auc(groups_wit_preds, truth = DAY30, .pred_1)
-brier_class(groups_wit_preds, truth = DAY30, .pred_1)
-
+roc_auc(groups_wit_preds, truth = DAY30, .pred_no)
+pr_auc(groups_wit_preds, truth = DAY30, .pred_yes)
+brier_class(groups_wit_preds, truth = DAY30, .pred_yes)
 accuracy(groups_wit_preds, truth = DAY30, .pred_class)
 f_meas(groups_wit_preds, truth = DAY30, .pred_class)
 
@@ -184,13 +183,23 @@ f_meas(groups_wit_preds, truth = DAY30, .pred_class)
 # define outcome (outcome set to 0 and 1, it needs to be numeric)
 y_training <- as.numeric(train$DAY30) -1
 y_testing <- as.numeric(test$DAY30) -1
+y_data <- as.numeric(data$DAY30) -1
+
+explainer_lm <- explain(last_fit$.workflow, data = testing[,-1], y = y_testing)
+fobject <- fairness_check(explainer_lm,
+                          protected = testing$SEX,
+                          privileged = "male",
+                          epsilon = 0.8)
+
+
+model_fit <- last_fit %>% 
+  extract_workflow()
 
 # CONSTRUCT EXPLAINER
-explainer <- explain_tidymodels(last_fit$.workflow, data = test %>% select(-DAY30), y = y_testing, 
-                                label = "LightGBM", type = "classification")
+explainer <- explain_tidymodels(model_fit, data = test[,-1], y = y_testing)
 
 # FAIRNESS CHECK
-fobject <- fairness_check(explainer_lm,
+fobject <- fairness_check(explainer,
                           protected = test$SEX,
                           privileged = "male",
                           epsilon = 0.8)
