@@ -284,80 +284,41 @@ plot(fobject)
 ######################## ROC-PIVOT #################################
 ####################################################################
 
-set.seed(1)
-gbm_model <-gbm(salary ~. , data = adult, distribution = "bernoulli")
-gbm_explainer <- explain(gbm_model,
-                         data = adult[,-1],
-                         y = adult$salary,
-                         verbose = FALSE)
-
+# run ROC pivot method on the baseline GBM model, and explain
 gbm_explainer_r <- roc_pivot(gbm_explainer,
-                             protected = protected,
-                             privileged = "Male")
+                             protected = testing$SEX,
+                             privileged = "male")
 
+# model performance on data
+model_performance(gbm_explainer_r)
 
-fobject <- fairness_check(fobject, gbm_explainer_r, 
-                          label = "gbm_roc",  # label as vector for explainers
-                          verbose = FALSE) 
+# fairness check
+fobject <- fairness_check(fobject, gbm_explainer_r,
+                          protected = testing$SEX, 
+                          privileged = "male",
+                          label = "GBM_roc_pivot") 
 
+# visualize fairness check
 plot(fobject)
 
 ####################################################################
 ################### CUTOFF MANIPULATION ############################
 ####################################################################
 
-set.seed(1)
-gbm_model <-gbm(salary ~. , data = adult, distribution = "bernoulli")
-gbm_explainer <- explain(gbm_model,
-                         data = adult[,-1],
-                         y = adult$salary,
-                         verbose = FALSE)
 
 # test fairness object
 fobject_test <- fairness_check(gbm_explainer, 
-                               protected = protected, 
-                               privileged = "Male",
-                               verbose = FALSE) 
+                               protected = testing$SEX, 
+                               privileged = "male") 
 
-plot(ceteris_paribus_cutoff(fobject_test, subgroup = "Female"))
+# check ideal cutoff for protected subgroup
+plot(ceteris_paribus_cutoff(fobject_test, subgroup = "female"))
 
-fc <- fairness_check(gbm_explainer, fobject,
-                     label = "gbm_cutoff",
-                     cutoff = list(Female = 0.25),
-                     verbose = FALSE)
+# set cutoff value to what is obtained from the plot above
+# undertake fairness check
+fobject <- fairness_check(gbm_explainer, fobject,
+                     label = "GBM_cutoff",
+                     cutoff = list(female = 0.65))
 
-fc$parity_loss_metric_data
-plot(fc)
-
-print(fc , colorize = FALSE)
-
-
-####################################################################
-####################################################################
-########################## TRADE-OFF ###############################
-############# FAIRNESS AND PREDICTIVE VALIDITY #####################
-####################################################################
-
-paf <- performance_and_fairness(fc, fairness_metric = "STP",
-                                performance_metric = "accuracy")
-
-plot(paf)
-
-
-
-
-# install Python environment to use aif360 (it takes ~5-10 minutes)
-install.packages("reticulate")
-reticulate::install_miniconda()
-reticulate::conda_list()
-reticulate::py_config()
-
-reticulate::conda_create(envname = "r-test")
-reticulate::use_miniconda(condaenv = "r-test", required = TRUE)
-aif360::install_aif360(envname = "r-test")
-reticulate::use_miniconda(condaenv = "r-test", required = TRUE)
-
-library(aif360)
-load_aif360_lib()
-
-
+# visualize fairness check
+plot(fobject)
