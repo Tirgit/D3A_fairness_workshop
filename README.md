@@ -4,7 +4,7 @@
 The aim of the following exercise is to get some hands-on experience with implementing algorithmic fairness in a prediction model using a biomedical dataset. Your group will have four distinct tasks (see details below), and you will need to cleverly divide tasks to complete the exercise in time - you will have only 45 minutes! But you don't start from scratch, we have already prepared a dataset and some code to get you started. The key tasks are to assess predictive performance of models across population subgroups defined by protected attributes (sex and immigration status), and to mitigate any potential disparities that you observe.
 
 ## Data
-For the hackathon we will use the [GUSTO-I trial data](https://pubmed.ncbi.nlm.nih.gov/7882472/) dataset which contains 40,830 observations and 29 variables. The dataset can be used to predict 30 day mortality (DAY30) in patients who have suffered from an acute myocardial infarction.
+For the hackathon we will use the [GUSTO-I trial data](https://pubmed.ncbi.nlm.nih.gov/7882472/) dataset which contains 40,830 observations and 28 variables. The dataset can be used to predict 30 day mortality (DAY30) in patients who have suffered from an acute myocardial infarction.
 
 [Detailed information about the data here](data/Dataset.md)
 
@@ -42,6 +42,7 @@ These metrics are:
 - Predictive equality ratio FP/(FP+TN)
 - Predictive parity ratio TP/(TP+FP)
 - Statistical parity ratio (TP+FP)/(TP+FP+TN+FN)
+
 Try to think about which metric is the most relevant for this use case.
 
 The *0_baseline_fairness_bias* script (and the *2_mitigation_aif360* script for Python users) contains various strategies to mitigate bias. Bias mitigation strategies can be divided into three categories: pre-processing, in-processing and post-processing. 
