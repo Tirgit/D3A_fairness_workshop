@@ -6,6 +6,7 @@
 ## Inspiration from: https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels
 ## Fairness tutorial: https://cran.r-project.org/web/packages/fairmodels/vignettes/Advanced_tutorial.html
 ## Bias mitigation: https://towardsdatascience.com/fairmodels-lets-fight-with-biased-machine-learning-models-f7d66a2287fc
+## Fairmodels article: https://journal.r-project.org/articles/RJ-2022-019/
 
 ## ------------------------------------
 # Install list of libraries

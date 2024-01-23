@@ -31,39 +31,38 @@ install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
 ```
 
 ## Prediction
-slip train test
-define a ML for predicting outcome (binary classification)
-confusion matrix
-define metrics (F1 / AUPRC)
-stratified metrics (output F1 / AUPRC for men vs women)
+We recommend that you start with a baseline model (GLM) in the *0_baseline_fairness_bias* script, and then assess model performances depending on your task in your group in the *0_baseline_fairness_bias* script or the other supplied scripts. Use a metrics of prediction of your choice. This can be a single confusion matrix metric, or a more sophisticated metric, such as ROC AUC, PRAUC, F1-score, etc. We suggest you stick with one metric and use it throughout the hackathon. The standard functions (model_performance() in R, and classification_report() in Python) will output precision, recall, F1-score, accuracy, and ROC AUC. Feel free to implement other metrics.
 
 ## Fairness
-The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. 
+The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. Many metrics exist to assess algorithmic group fairness, and the most common ones use [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) metrics. In short, the aim is usually to choose a relevant confusion matrix metric and try to equalize it in the pre-selected population subgroups - in this case, by sex. You will see that the DALEX/fairmodels pipeline that are implemented in the scripts will have a standard set of metrics that you can use to assess fairness. These metrics are: 
+- Accuracy equality ratio (TP+TN)/(TP+TN+FP+FN)
+- Equal opportunity ratio TP/(TP+FN)
+- Predictive equality ratio FP/(FP+TN)
+- Predictive parity ratio TP/(TP+FP)
+- Statistical parity ratio (TP+FP)/(TP+FP+TN+FN)
+Try to think about which metric is the most relevant for this use case.
 
-recap on confusion matrix
-fairness metrics: Equalized Odds and Predictive Rate Parity are two most relevant (but there are more)
-how to achieve fairness / mitigate bias
--> preprocessing
--> algorithmic tuning
--> postprocessing
-https://journal.r-project.org/articles/RJ-2022-019/
-
+The *0_baseline_fairness_bias* script (and the *2_mitigation_aif360* script for Python users) contains various strategies to mitigate bias. Bias mitigation strategies can be divided into three categories: pre-processing, in-processing and post-processing. 
+- Pre-processing strategies are applied before the model is trained,
+- In-processing strategies are applied during the training of the model, and
+- Post-processing strategies are applied after the model is trained. 
+R users will focus on pre-processing and post-processing, while Python users can also explore in-processing strategies.
 
 ## Groups
-1. Improve the model (e.g., feature selection, from GLM to ML), but no fairness constraints
-2. Improve the model: Pre-processing
-3. Improve the model: Optimization
-4. Improve the model: Post-processing
+You are divided in groups of 4-5 people. You will have 45 minutes to complete the following tasks, and we suggest that you divide the tasks between the group members and work in parallel and communicate, communicate, communicate.
+The tasks are:
+1. Record performance of baseline GLM model
+2. Try to improve the model (e.g., via feature selection, implementing more sophisticated ML approach, parameter tuning). We implemented a LightGBM algorithm, but you are free to try other algorithms. Do NOT implement any bias mitigation strategies yet, only focus on obtaining a better model.
+3. Improve the model via bias mitigation in the pre-processing stage
+4. Improve the model via bias mitigation in the in-processing stage
+5. Improve the model via bias mitigation in the post-processing stage
 
-Upload results to:
+Record the overall performance of the model, the stratified performance of the model (men vs. women), and the fairness metric of your choice.
+
+## Discussion
+Upload results and your key learnings to:
 https://docs.google.com/presentation/d/1D2Fc44sKXB3b5-tT3yvADzPGcQFUQ4AcVz6VDRiw15U/edit?usp=sharing
 
 
-## Discussion
-upload results to : xxxxxx google slides
-results from performance metrics and fairness metrics
-
-## How to cite
-
+## How to cite code from this repository
 TODO: Generate Zenodo DOI for this workshop
-

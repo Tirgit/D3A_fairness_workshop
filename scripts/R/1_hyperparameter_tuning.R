@@ -177,40 +177,8 @@ brier_class(groups_wit_preds, truth = DAY30, .pred_yes)
 accuracy(groups_wit_preds, truth = DAY30, .pred_class)
 f_meas(groups_wit_preds, truth = DAY30, .pred_class)
 
-
-############## FAIRMODELS #####################
-
-# define outcome (outcome set to 0 and 1, it needs to be numeric)
-y_training <- as.numeric(train$DAY30) -1
-y_testing <- as.numeric(test$DAY30) -1
-y_data <- as.numeric(data$DAY30) -1
-
-explainer_lm <- explain(last_fit$.workflow, data = testing[,-1], y = y_testing)
-fobject <- fairness_check(explainer_lm,
-                          protected = testing$SEX,
-                          privileged = "male",
-                          epsilon = 0.8)
-
-
-model_fit <- last_fit %>% 
-  extract_workflow()
-
-# CONSTRUCT EXPLAINER
-explainer <- explain_tidymodels(model_fit, data = test[,-1], y = y_testing)
-
-# FAIRNESS CHECK
-fobject <- fairness_check(explainer,
-                          protected = test$SEX,
-                          privileged = "male",
-                          epsilon = 0.8)
-
-# Calculate fairness metrics
-# TODO FIX ERROR
-fobject <- fairness_check(explainer,
-                          protected = test$SEX, 
-                          privileged = "male",
-                          verbose = TRUE)
-
-# Plot fairness metrics
-autoplot(fobject)
-
+# Using tidymodels, cross-validation and grid search we were unable
+# to implement a DALEX/fairmodels explainer and fairness check.
+# However, you will be able to assess the stratified confusion
+# matrices and calculate your own metrics according to your preferred
+# metrics.
