@@ -31,10 +31,12 @@ install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
 ```
 
 ## Prediction
-We recommend that you start with a baseline model (GLM) in the *0_baseline_fairness_bias* script, and then assess model performances depending on your task in your group in the *0_baseline_fairness_bias* script or the other supplied scripts. Use a metrics of prediction of your choice. This can be a single confusion matrix metric, or a more sophisticated metric, such as ROC AUC, PRAUC, F1-score, etc. We suggest you stick with one metric and use it throughout the hackathon. The standard functions (model_performance() in R, and classification_report() in Python) will output precision, recall, F1-score, accuracy, and ROC AUC. Feel free to implement other metrics.
+We recommend that you start with a baseline model (GLM) in the *0_baseline_fairness_bias* script, and then assess model performances depending on your task in your group in the *0_baseline_fairness_bias* script or the other supplied scripts. Use a metrics of prediction of your choice. This can be a single confusion matrix metric, or a more sophisticated metric, such as ROC AUC, PRAUC, F1-score, etc. We suggest you stick with one metric and use it throughout the hackathon. The standard functions (*model_performance* in R, and *classification_report* in Python) will output precision, recall, F1-score, accuracy, and ROC AUC. Feel free to implement other metrics.
 
 ## Fairness
-The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. Many metrics exist to assess algorithmic group fairness, and the most common ones use [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) metrics. In short, the aim is usually to choose a relevant confusion matrix metric and try to equalize it in the pre-selected population subgroups - in this case, by sex. You will see that the DALEX/fairmodels pipeline that are implemented in the scripts will have a standard set of metrics that you can use to assess fairness. These metrics are: 
+The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. Many metrics exist to assess algorithmic group fairness, and the most common ones use [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) metrics. In short, the aim is usually to choose a relevant confusion matrix metric and try to equalize it in the pre-selected population subgroups - in this case, by sex. You will see that the DALEX/fairmodels pipeline that are implemented in the scripts will have a standard set of metrics that you can use to assess fairness.
+
+These metrics are: 
 - Accuracy equality ratio (TP+TN)/(TP+TN+FP+FN)
 - Equal opportunity ratio TP/(TP+FN)
 - Predictive equality ratio FP/(FP+TN)
@@ -62,7 +64,6 @@ Record the overall performance of the model, the stratified performance of the m
 ## Discussion
 Upload results and your key learnings to:
 https://docs.google.com/presentation/d/1D2Fc44sKXB3b5-tT3yvADzPGcQFUQ4AcVz6VDRiw15U/edit?usp=sharing
-
 
 ## How to cite code from this repository
 TODO: Generate Zenodo DOI for this workshop
