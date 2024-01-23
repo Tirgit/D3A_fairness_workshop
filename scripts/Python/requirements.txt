@@ -8,3 +8,4 @@ scikit-learn
 lightgbm
 dalex
 nbformat
+aif360
