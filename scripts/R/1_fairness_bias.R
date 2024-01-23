@@ -27,6 +27,7 @@ library(DALEXtra)
 library(fairmodels)
 library(pROC)
 library(ggplot2)
+library(gbm)
 
 # Install AIF360 from GitHub
 devtools::install_github("Trusted-AI/AIF360/aif360/aif360-r")
@@ -101,7 +102,8 @@ explainer_lm <- explain(model_fit, data = testing[,-1], y = y_testing)
 fobject <- fairness_check(explainer_lm,
                           protected = testing$SEX,
                           privileged = "male",
-                          epsilon = 0.8)
+                          epsilon = 0.8,
+                          label = c("GLM"))
 
 # BASIC METRICS
 model_performance(explainer_lm)
@@ -130,8 +132,6 @@ plot_density(fobject)
 ####################################################################
 ####################################################################
 
-
-
 ####################################################################
 ######################## REWEIGHTING ###############################
 ####################################################################
@@ -139,18 +139,22 @@ plot_density(fobject)
 # calculation weights
 weights <- reweight(protected = testing$SEX, y = as.numeric(testing$DAY30)-1)
 
+# convert outcome to numeric
 testing$DAY30 <- as.numeric(testing$DAY30)-1
 
+# run GBM model as a new baseline
 set.seed(1356)
 gbm_model <- gbm(DAY30 ~. ,
                  data = testing,
                  distribution = "bernoulli")
 
+# run reweighted GBM model
 gbm_model_weighted <- gbm(DAY30 ~. ,
                  data = testing,
                  weights = weights,
                  distribution = "bernoulli")
 
+# explain baseline and reweighted models
 gbm_explainer <- explain(gbm_model,
                            data = testing[,-1],
                            y = testing$DAY30)
@@ -159,11 +163,17 @@ gbm_explainer_w <- explain(gbm_model_weighted,
                            data = testing[,-1],
                            y = testing$DAY30)
 
-fobject <- fairness_check(gbm_explainer, gbm_explainer_w,
+# model performance
+model_performance(gbm_explainer)
+model_performance(gbm_explainer_w)
+
+# fairness check
+fobject <- fairness_check(fobject, gbm_explainer, gbm_explainer_w,
                           protected = testing$SEX,
                           privileged = "male",
-                          label = c("original", "weighted"))
+                          label = c("GBM", "GBM_weighted"))
 
+# visualize fairness check
 plot(fobject)
 
 
@@ -171,9 +181,10 @@ plot(fobject)
 ######################### RESAMPLING ###############################
 ####################################################################
 
-# to obtain probs we will use simple linear regression
+# to obtain probabilities we will use simple GLM
 probs <- glm(DAY30 ~., data = testing, family = binomial())$fitted.values
 
+# calculate indeces for resampling in two ways (uniform and preferential)
 uniform_indexes      <- resample(protected = testing$SEX,
                                  y = testing$DAY30)
 preferential_indexes <- resample(protected = testing$SEX,
@@ -181,41 +192,37 @@ preferential_indexes <- resample(protected = testing$SEX,
                                  type = "preferential",
                                  probs = probs)
 
+# run GBM model on resampled data in two ways (uniform and preferential)
 set.seed(5777)
-gbm_model <- gbm(DAY30 ~. ,
-                 data = testing,
-                 distribution = "bernoulli")
-
-gbm_explainer <- explain(gbm_model,
-                           data = testing[,-1],
-                           y = testing$DAY30,
-                           label = "gbm_original")
-
-
-set.seed(5777)
-gbm_model     <- gbm(DAY30 ~. ,
+gbm_model_u     <- gbm(DAY30 ~. ,
                      data = testing[uniform_indexes,],
                      distribution = "bernoulli")
+gbm_model_p     <- gbm(DAY30 ~. ,
+                     data = testing[preferential_indexes,],
+                     distribution = "bernoulli")
 
-gbm_explainer_u <- explain(gbm_model,
+# explain resampled models (uniform and preferential)
+gbm_explainer_u <- explain(gbm_model_u,
                            data = testing[,-1],
                            y = testing$DAY30,
                            label = "gbm_uniform")
 
-set.seed(5777)
-gbm_model     <- gbm(DAY30 ~. ,
-                     data = testing[preferential_indexes,],
-                     distribution = "bernoulli")
-
-gbm_explainer_p <- explain(gbm_model,
+gbm_explainer_p <- explain(gbm_model_p,
                            data = testing[,-1],
                            y = testing$DAY30,
                            label = "gbm_preferential")
 
-fobject <- fairness_check(gbm_explainer, gbm_explainer_u, gbm_explainer_p,
-                          protected = testing$SEX,
-                          privileged = "male")
+# model performance
+model_performance(gbm_explainer_u)
+model_performance(gbm_explainer_p)
 
+# fairness check
+fobject <- fairness_check(fobject, gbm_explainer_u, gbm_explainer_p,
+                          protected = testing$SEX,
+                          privileged = "male",
+                          label = c("GBM_rs_uniform", "GBM_rs_pref"))
+
+# visualize fairness check
 plot(fobject)
 
 
@@ -223,35 +230,47 @@ plot(fobject)
 ################# REMOVING DISPARATE IMPACT ########################
 ####################################################################
 
-library(aif360)
+# this script only works with dataframes with numeric variables
+
+# keep only numeric variables in testing
+testing_num <- testing[,sapply(testing, is.numeric)]
+# cbind SEX as factor to testing_num
+testing_num <- cbind(testing_num, SEX = testing$SEX)
 
 # removing disparate impact
-di <- aif360::disparate_impact_remover(repair_level = 1.0, sensitive_attribute  = "SEX")
-repaired_data <- di$fit_transform(data)
+fixed_data <- fairmodels::disparate_impact_remover(
+  data = testing_num,
+  protected = testing_num$SEX,
+  features_to_transform = "AGE",
+  lambda = 1
+)
 
-set.seed(1)
-gbm_model     <- gbm(salary ~. , data = data_fixed, distribution = "bernoulli")
+# add back all factor variables
+fixed_data <- cbind(fixed_data, KILLIP = testing$KILLIP)
+fixed_data <- cbind(fixed_data, MILOC = testing$MILOC)
+fixed_data <- cbind(fixed_data, PMI = testing$PMI)
+fixed_data <- cbind(fixed_data, SMK = testing$SMK)
+fixed_data <- cbind(fixed_data, TX = testing$TX)
+
+# run GBM model on data where disparate impact is removed
+set.seed(6363)
+gbm_model     <- gbm(DAY30 ~. , data = fixed_data, distribution = "bernoulli")
+
+# explain model
 gbm_explainer_dir <- explain(gbm_model,
-                             data = data_fixed[,-1],
-                             y = adult$salary,
-                             label = "gbm_dir",
-                             verbose = FALSE)
+                             data = fixed_data[,-1],
+                             y = testing$DAY30,
+                             label = "gbm_disp_imp")
 
 # model performance on data
 model_performance(gbm_explainer_dir)
-#model_performance(gbm_explainer)
 
 # fairness exploration
-fobject <- fairness_check(gbm_explainer, gbm_explainer_dir,
-                          protected = protected, 
-                          privileged = "Male",
-                          verbose = FALSE)
+fobject <- fairness_check(fobject, gbm_explainer_dir,
+                          protected = testing$SEX, 
+                          privileged = "male",
+                          label = c("GBM_disp_imp"))
 plot(fobject)
-
-
-
-
-
 
 
 
@@ -327,5 +346,18 @@ plot(paf)
 
 
 
+# install Python environment to use aif360 (it takes ~5-10 minutes)
+install.packages("reticulate")
+reticulate::install_miniconda()
+reticulate::conda_list()
+reticulate::py_config()
+
+reticulate::conda_create(envname = "r-test")
+reticulate::use_miniconda(condaenv = "r-test", required = TRUE)
+aif360::install_aif360(envname = "r-test")
+reticulate::use_miniconda(condaenv = "r-test", required = TRUE)
+
+library(aif360)
+load_aif360_lib()
 
 
