@@ -13,7 +13,8 @@
 # Install all the libraries with pak
 # install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
 # pak::pkg_install(c("pROC", "tidyverse", "tidymodels", "ggplot2", "fairmodels", 
-# "parsnip", "DALEX", "tune", "yardstick", "DALEX", "DALEXtra"))
+# "parsnip", "DALEX", "tune", "yardstick", "DALEX", "DALEXtra",
+# "gbm"))
 
 # Load libraries
 library(pROC)
@@ -28,10 +29,6 @@ library(fairmodels)
 library(pROC)
 library(ggplot2)
 library(gbm)
-
-# Install AIF360 from GitHub
-devtools::install_github("Trusted-AI/AIF360/aif360/aif360-r")
-library(aif360)
 
 ####################################################################
 ####################################################################
@@ -111,18 +108,13 @@ model_performance(explainer_lm)
 # CHECK IF FAIRNESS CHECK PASSED FOR 5 SELECTED METRICS
 fobject
 
-# NUMERIC FAIRNESS METRICS
-fobject$groups_data$workflow
-
 # VISUALIZE FAIRNESS CHECK
+
 # FIRST, RAW METRICS
 plot(metric_scores(fobject))
+
 # THEN, RELATIVE METRICS
 plot(fobject)
-
-# PROBABILITIES
-plot_density(fobject)
-
 
 ####################################################################
 ####################################################################
@@ -137,20 +129,21 @@ plot_density(fobject)
 ####################################################################
 
 # calculation weights
-weights <- reweight(protected = testing$SEX, y = as.numeric(testing$DAY30)-1)
+weights <- reweight(protected = training$SEX, y = as.numeric(training$DAY30)-1)
 
 # convert outcome to numeric
+training$DAY30 <- as.numeric(training$DAY30)-1
 testing$DAY30 <- as.numeric(testing$DAY30)-1
 
 # run GBM model as a new baseline
 set.seed(1356)
 gbm_model <- gbm(DAY30 ~. ,
-                 data = testing,
+                 data = training,
                  distribution = "bernoulli")
 
 # run reweighted GBM model
 gbm_model_weighted <- gbm(DAY30 ~. ,
-                 data = testing,
+                 data = training,
                  weights = weights,
                  distribution = "bernoulli")
 
@@ -182,23 +175,23 @@ plot(fobject)
 ####################################################################
 
 # to obtain probabilities we will use simple GLM
-probs <- glm(DAY30 ~., data = testing, family = binomial())$fitted.values
+probs <- glm(DAY30 ~., data = training, family = binomial())$fitted.values
 
 # calculate indeces for resampling in two ways (uniform and preferential)
-uniform_indexes      <- resample(protected = testing$SEX,
-                                 y = testing$DAY30)
-preferential_indexes <- resample(protected = testing$SEX,
-                                 y = testing$DAY30,
+uniform_indexes      <- resample(protected = training$SEX,
+                                 y = training$DAY30)
+preferential_indexes <- resample(protected = training$SEX,
+                                 y = training$DAY30,
                                  type = "preferential",
                                  probs = probs)
 
 # run GBM model on resampled data in two ways (uniform and preferential)
 set.seed(5777)
 gbm_model_u     <- gbm(DAY30 ~. ,
-                     data = testing[uniform_indexes,],
+                     data = training[uniform_indexes,],
                      distribution = "bernoulli")
 gbm_model_p     <- gbm(DAY30 ~. ,
-                     data = testing[preferential_indexes,],
+                     data = training[preferential_indexes,],
                      distribution = "bernoulli")
 
 # explain resampled models (uniform and preferential)
@@ -232,25 +225,25 @@ plot(fobject)
 
 # this script only works with dataframes with numeric variables
 
-# keep only numeric variables in testing
-testing_num <- testing[,sapply(testing, is.numeric)]
-# cbind SEX as factor to testing_num
-testing_num <- cbind(testing_num, SEX = testing$SEX)
+# keep only numeric variables in training
+training_num <- training[,sapply(training, is.numeric)]
+# cbind SEX as factor to training_num
+training_num <- cbind(training_num, SEX = training$SEX)
 
 # removing disparate impact
 fixed_data <- fairmodels::disparate_impact_remover(
-  data = testing_num,
-  protected = testing_num$SEX,
+  data = training_num,
+  protected = training_num$SEX,
   features_to_transform = "AGE",
   lambda = 1
 )
 
 # add back all factor variables
-fixed_data <- cbind(fixed_data, KILLIP = testing$KILLIP)
-fixed_data <- cbind(fixed_data, MILOC = testing$MILOC)
-fixed_data <- cbind(fixed_data, PMI = testing$PMI)
-fixed_data <- cbind(fixed_data, SMK = testing$SMK)
-fixed_data <- cbind(fixed_data, TX = testing$TX)
+fixed_data <- cbind(fixed_data, KILLIP = training$KILLIP)
+fixed_data <- cbind(fixed_data, MILOC = training$MILOC)
+fixed_data <- cbind(fixed_data, PMI = training$PMI)
+fixed_data <- cbind(fixed_data, SMK = training$SMK)
+fixed_data <- cbind(fixed_data, TX = training$TX)
 
 # run GBM model on data where disparate impact is removed
 set.seed(6363)
@@ -258,7 +251,7 @@ gbm_model     <- gbm(DAY30 ~. , data = fixed_data, distribution = "bernoulli")
 
 # explain model
 gbm_explainer_dir <- explain(gbm_model,
-                             data = fixed_data[,-1],
+                             data = testing[,-1],
                              y = testing$DAY30,
                              label = "gbm_disp_imp")
 
@@ -318,7 +311,8 @@ plot(ceteris_paribus_cutoff(fobject_test, subgroup = "female"))
 # undertake fairness check
 fobject <- fairness_check(gbm_explainer, fobject,
                      label = "GBM_cutoff",
-                     cutoff = list(female = 0.65))
+                     cutoff = list(female = 0.63)) #check cutoff
 
 # visualize fairness check
 plot(fobject)
+
