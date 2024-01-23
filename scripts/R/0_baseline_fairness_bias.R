@@ -110,12 +110,40 @@ model_performance(explainer_lm)
 fobject
 
 # VISUALIZE FAIRNESS CHECK
-
 # FIRST, RAW METRICS
 plot(metric_scores(fobject))
 
 # THEN, RELATIVE METRICS
 plot(fobject)
+
+# obtain overall & stratified performance metrics
+preds <- explainer_lm$model |> 
+  augment(new_data = testing)
+
+# Confusion matrix
+conf_mat(preds, truth = DAY30, .pred_class)
+conf_mat(preds[preds$SEX == "male",], truth = DAY30, .pred_class)
+conf_mat(preds[preds$SEX == "female",], truth = DAY30, .pred_class)
+
+# Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
+roc_auc(preds, truth = DAY30, .pred_no)
+pr_auc(preds, truth = DAY30, .pred_yes)
+brier_class(preds, truth = DAY30, .pred_yes)
+accuracy(preds, truth = DAY30, .pred_class)
+f_meas(preds, truth = DAY30, .pred_class)
+
+roc_auc(preds[preds$SEX == "male",], truth = DAY30, .pred_no)
+pr_auc(preds[preds$SEX == "male",], truth = DAY30, .pred_yes)
+brier_class(preds[preds$SEX == "male",], truth = DAY30, .pred_yes)
+accuracy(preds[preds$SEX == "male",], truth = DAY30, .pred_class)
+f_meas(preds[preds$SEX == "male",], truth = DAY30, .pred_class)
+
+roc_auc(preds[preds$SEX == "female",], truth = DAY30, .pred_no)
+pr_auc(preds[preds$SEX == "female",], truth = DAY30, .pred_yes)
+brier_class(preds[preds$SEX == "female",], truth = DAY30, .pred_yes)
+accuracy(preds[preds$SEX == "female",], truth = DAY30, .pred_class)
+f_meas(preds[preds$SEX == "female",], truth = DAY30, .pred_class)
+
 
 ####################################################################
 ####################################################################
@@ -170,6 +198,7 @@ fobject <- fairness_check(fobject, gbm_explainer, gbm_explainer_w,
 # visualize fairness check
 plot(fobject)
 
+# to check stratified performance metrics go to the end script
 
 ####################################################################
 ######################### RESAMPLING ###############################
@@ -219,6 +248,7 @@ fobject <- fairness_check(fobject, gbm_explainer_u, gbm_explainer_p,
 # visualize fairness check
 plot(fobject)
 
+# to check stratified performance metrics go to the end script
 
 ####################################################################
 ################# REMOVING DISPARATE IMPACT ########################
@@ -266,7 +296,7 @@ fobject <- fairness_check(fobject, gbm_explainer_dir,
                           label = c("GBM_disp_imp"))
 plot(fobject)
 
-
+# to check stratified performance metrics go to the end script
 
 ####################################################################
 ####################################################################
@@ -295,6 +325,8 @@ fobject <- fairness_check(fobject, gbm_explainer_r,
 # visualize fairness check
 plot(fobject)
 
+# to check stratified performance metrics go to the end script
+
 ####################################################################
 ################### CUTOFF MANIPULATION ############################
 ####################################################################
@@ -317,3 +349,50 @@ fobject <- fairness_check(gbm_explainer, fobject,
 # visualize fairness check
 plot(fobject)
 
+# to check stratified performance metrics go to the end script
+
+
+####################################################################
+####################################################################
+################ STRATIFIED PERFORMANCE METRICS ####################
+####################### FOR GBM MODELS #############################
+####################################################################
+####################################################################
+
+# replace gbm_model with your chosen model to examine
+model_to_examine <- gbm_model_weighted
+
+
+# obtain overall & stratified performance metrics
+preds_yes <- predict(model_to_examine, newdata = testing, type = "response")
+pred_class <- rep(0,length(preds_yes))
+pred_class[preds_yes>.5] <- 1
+pred_df <- as.data.frame(cbind(preds_yes, pred_class, DAY30 = testing$DAY30, SEX = testing$SEX))
+pred_df$preds_no <- 1 - pred_df$preds_yes
+pred_df$pred_class <- as.factor(pred_df$pred_class)
+pred_df$DAY30 <- as.factor(pred_df$DAY30)
+pred_df$SEX <- factor(pred_df$SEX, levels = c(1, 2), labels = c("female", "male"))
+
+# Confusion matrix
+conf_mat(pred_df, truth = DAY30, pred_class)
+conf_mat(pred_df[pred_df$SEX == "male",], truth = DAY30, pred_class)
+conf_mat(pred_df[pred_df$SEX == "female",], truth = DAY30, pred_class)
+
+# Calculate ROC AUC, accuracy, F1, PR AUC, Brier score
+roc_auc(pred_df, truth = DAY30, preds_no)
+pr_auc(pred_df, truth = DAY30, preds_no)
+brier_class(pred_df, truth = DAY30, preds_yes)
+accuracy(pred_df, truth = DAY30, pred_class)
+f_meas(pred_df, truth = DAY30, pred_class)
+
+roc_auc(pred_df[pred_df$SEX == "male",], truth = DAY30, preds_no)
+pr_auc(pred_df[pred_df$SEX == "male",], truth = DAY30, preds_no)
+brier_class(pred_df[pred_df$SEX == "male",], truth = DAY30, preds_yes)
+accuracy(pred_df[pred_df$SEX == "male",], truth = DAY30, pred_class)
+f_meas(pred_df[pred_df$SEX == "male",], truth = DAY30, pred_class)
+
+roc_auc(pred_df[pred_df$SEX == "female",], truth = DAY30, preds_no)
+pr_auc(pred_df[pred_df$SEX == "female",], truth = DAY30, preds_no)
+brier_class(pred_df[pred_df$SEX == "female",], truth = DAY30, preds_yes)
+accuracy(pred_df[pred_df$SEX == "female",], truth = DAY30, pred_class)
+f_meas(pred_df[pred_df$SEX == "female",], truth = DAY30, pred_class)
