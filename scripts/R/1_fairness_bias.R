@@ -174,50 +174,49 @@ plot(fobject)
 # to obtain probs we will use simple linear regression
 probs <- glm(DAY30 ~., data = testing, family = binomial())$fitted.values
 
-uniform_indexes      <- resample(protected = protected,
-                                 y = adult$salary)
-preferential_indexes <- resample(protected = protected,
-                                 y = adult$salary,
+uniform_indexes      <- resample(protected = testing$SEX,
+                                 y = testing$DAY30)
+preferential_indexes <- resample(protected = testing$SEX,
+                                 y = testing$DAY30,
                                  type = "preferential",
                                  probs = probs)
 
-set.seed(1)
-gbm_model     <- gbm(salary ~. ,
-                     data = adult[uniform_indexes,],
+set.seed(5777)
+gbm_model <- gbm(DAY30 ~. ,
+                 data = testing,
+                 distribution = "bernoulli")
+
+gbm_explainer <- explain(gbm_model,
+                           data = testing[,-1],
+                           y = testing$DAY30,
+                           label = "gbm_original")
+
+
+set.seed(5777)
+gbm_model     <- gbm(DAY30 ~. ,
+                     data = testing[uniform_indexes,],
                      distribution = "bernoulli")
 
 gbm_explainer_u <- explain(gbm_model,
-                           data = adult[,-1],
-                           y = adult$salary,
-                           label = "gbm_uniform",
-                           verbose = FALSE)
+                           data = testing[,-1],
+                           y = testing$DAY30,
+                           label = "gbm_uniform")
 
-set.seed(1)
-gbm_model     <- gbm(salary ~. ,
-                     data = adult[preferential_indexes,],
+set.seed(5777)
+gbm_model     <- gbm(DAY30 ~. ,
+                     data = testing[preferential_indexes,],
                      distribution = "bernoulli")
 
 gbm_explainer_p <- explain(gbm_model,
-                           data = adult[,-1],
-                           y = adult$salary,
-                           label = "gbm_preferential",
-                           verbose = FALSE)
+                           data = testing[,-1],
+                           y = testing$DAY30,
+                           label = "gbm_preferential")
 
-fobject <- fairness_check(fobject, gbm_explainer_u, gbm_explainer_p, 
-                          verbose = FALSE)
+fobject <- fairness_check(gbm_explainer, gbm_explainer_u, gbm_explainer_p,
+                          protected = testing$SEX,
+                          privileged = "male")
+
 plot(fobject)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ####################################################################
