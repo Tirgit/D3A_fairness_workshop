@@ -5,6 +5,7 @@
 ## Notes:
 ## Inspiration from: https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels
 ## Fairness tutorial: https://cran.r-project.org/web/packages/fairmodels/vignettes/Advanced_tutorial.html
+## Bias mitigation: https://towardsdatascience.com/fairmodels-lets-fight-with-biased-machine-learning-models-f7d66a2287fc
 
 ## ------------------------------------
 # Install list of libraries
@@ -27,6 +28,9 @@ library(fairmodels)
 library(pROC)
 library(ggplot2)
 
+# Install AIF360 from GitHub
+devtools::install_github("Trusted-AI/AIF360/aif360/aif360-r")
+library(aif360)
 
 ####################################################################
 ####################################################################
@@ -118,124 +122,47 @@ plot(fobject)
 plot_density(fobject)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ####################################################################
 ####################################################################
 ####################### BIAS MITIGATION ############################
 ############### FAIRMODELS & DALEX R PACKAGES ######################
-####################################################################
-####################################################################
-
-# https://towardsdatascience.com/fairmodels-lets-fight-with-biased-machine-learning-models-f7d66a2287fc
-# https://cran.r-project.org/web/packages/fairmodels/vignettes/Advanced_tutorial.html
-
-# load ADULT data
-data("adult")
-head(adult)
-?adult
-
-# predict salary - protected attibute: sex
-adult$salary <- as.numeric(adult$salary) -1 # 0 if bad and 1 if good risk
-protected <- adult$sex
-adult <- adult[colnames(adult) != "sex"] # sex not specified
-
-# making model
-set.seed(1)
-gbm_model <-gbm(salary ~. , data = adult, distribution = "bernoulli")
-
-# making explainer object
-gbm_explainer <- explain(gbm_model,
-                         data = adult[,-1],
-                         y = adult$salary,
-                         colorize = FALSE)
-
-# model performance on data
-model_performance(gbm_explainer)
-
-# fairness exploration
-fobject <- fairness_check(gbm_explainer, 
-                          protected  = protected, 
-                          privileged = "Male", 
-                          colorize = FALSE)
-
-fobject
-plot(fobject)
-
-# PROBABILITIES
-plot_density(fobject)
-
-# METRIC DIFFERENCES
-plot(metric_scores(fobject))
-
-####################################################################
-####################################################################
 ######################## PRE-PROCESSING ############################
 ####################################################################
 ####################################################################
 
-####################################################################
-################# REMOVING DISPARATE IMPACT ########################
-####################################################################
 
-# removing disparate impact
-data_fixed <- disparate_impact_remover(data = adult, protected = protected, 
-                                       features_to_transform = c("age", "hours_per_week",
-                                                                 "capital_loss",
-                                                                 "capital_gain"))
-
-set.seed(1)
-gbm_model     <- gbm(salary ~. , data = data_fixed, distribution = "bernoulli")
-gbm_explainer_dir <- explain(gbm_model,
-                             data = data_fixed[,-1],
-                             y = adult$salary,
-                             label = "gbm_dir",
-                             verbose = FALSE)
-
-# model performance on data
-model_performance(gbm_explainer_dir)
-#model_performance(gbm_explainer)
-
-# fairness exploration
-fobject <- fairness_check(gbm_explainer, gbm_explainer_dir,
-                          protected = protected, 
-                          privileged = "Male",
-                          verbose = FALSE)
-plot(fobject)
 
 ####################################################################
 ######################## REWEIGHTING ###############################
 ####################################################################
 
 # calculation weights
-weights <- reweight(protected = protected, y = adult$salary)
+weights <- reweight(protected = testing$SEX, y = as.numeric(testing$DAY30)-1)
 
-set.seed(1)
-gbm_model <- gbm(salary ~. ,
-                 data = adult,
+testing$DAY30 <- as.numeric(testing$DAY30)-1
+
+set.seed(1356)
+gbm_model <- gbm(DAY30 ~. ,
+                 data = testing,
+                 distribution = "bernoulli")
+
+gbm_model_weighted <- gbm(DAY30 ~. ,
+                 data = testing,
                  weights = weights,
                  distribution = "bernoulli")
 
-gbm_explainer_w <- explain(gbm_model,
-                           data = adult[,-1],
-                           y = adult$salary,
-                           label = "gbm_weighted",
-                           verbose = FALSE)
+gbm_explainer <- explain(gbm_model,
+                           data = testing[,-1],
+                           y = testing$DAY30)
 
-fobject <- fairness_check(fobject, gbm_explainer_w, verbose = FALSE)
+gbm_explainer_w <- explain(gbm_model_weighted,
+                           data = testing[,-1],
+                           y = testing$DAY30)
+
+fobject <- fairness_check(gbm_explainer, gbm_explainer_w,
+                          protected = testing$SEX,
+                          privileged = "male",
+                          label = c("original", "weighted"))
 
 plot(fobject)
 
@@ -245,7 +172,7 @@ plot(fobject)
 ####################################################################
 
 # to obtain probs we will use simple linear regression
-probs <- glm(salary ~., data = adult, family = binomial())$fitted.values
+probs <- glm(DAY30 ~., data = testing, family = binomial())$fitted.values
 
 uniform_indexes      <- resample(protected = protected,
                                  y = adult$salary)
@@ -279,6 +206,54 @@ gbm_explainer_p <- explain(gbm_model,
 fobject <- fairness_check(fobject, gbm_explainer_u, gbm_explainer_p, 
                           verbose = FALSE)
 plot(fobject)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################################################################
+################# REMOVING DISPARATE IMPACT ########################
+####################################################################
+
+library(aif360)
+
+# removing disparate impact
+di <- aif360::disparate_impact_remover(repair_level = 1.0, sensitive_attribute  = "SEX")
+repaired_data <- di$fit_transform(data)
+
+set.seed(1)
+gbm_model     <- gbm(salary ~. , data = data_fixed, distribution = "bernoulli")
+gbm_explainer_dir <- explain(gbm_model,
+                             data = data_fixed[,-1],
+                             y = adult$salary,
+                             label = "gbm_dir",
+                             verbose = FALSE)
+
+# model performance on data
+model_performance(gbm_explainer_dir)
+#model_performance(gbm_explainer)
+
+# fairness exploration
+fobject <- fairness_check(gbm_explainer, gbm_explainer_dir,
+                          protected = protected, 
+                          privileged = "Male",
+                          verbose = FALSE)
+plot(fobject)
+
+
+
+
+
+
 
 
 ####################################################################
