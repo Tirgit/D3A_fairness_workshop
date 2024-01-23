@@ -177,7 +177,7 @@ brier_class(groups_wit_preds, truth = DAY30, .pred_yes)
 accuracy(groups_wit_preds, truth = DAY30, .pred_class)
 f_meas(groups_wit_preds, truth = DAY30, .pred_class)
 
-# Using tidymodels, cross-validation and grid search we were unable
+# For the cross-validated model using grid search we were unable
 # to implement a DALEX/fairmodels explainer and fairness check.
 # However, you will be able to assess the stratified confusion
 # matrices and calculate your own metrics according to your preferred
