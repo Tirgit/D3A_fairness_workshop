@@ -111,7 +111,8 @@ y_pred = glm_model.predict(X_test)
 
 # Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-print(cm)
+cm_df = pd.DataFrame(cm, index=['Actual Negative', 'Actual Positive'], columns=['Predicted Negative', 'Predicted Positive'])
+print(cm_df)
 
 # Performance metrics
 print(classification_report(y_test, y_pred))

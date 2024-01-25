@@ -3,7 +3,9 @@
 ## Author: Adrian G. Zucco and Tibor V. Varga
 ## Date Created: 2024-01-22
 ## Notes:
-## Inspired from https://dalex.drwhy.ai/python-dalex-fairness.html
+## Inspired from 
+## https://nbviewer.org/github/IBM/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb
+
 
 # %% ######################## Import libraries #############################
 # Import libraries
@@ -229,9 +231,28 @@ dt_test.features = scaler.transform(dt_test.features)
 # %% Train PR model
 PR_model = PR_model.fit(dt_train)
 
+y_pred_prob_PR = PR_model.predict(dt_test).scores
+
 # %% Run metrics from AIF360
 
 unprivileged_groups = [{"SEX" : 1}]
 privileged_groups = [{"SEX" : 0}]
 
 test_aif360(dt_test, PR_model, [0.5], unprivileged_groups, privileged_groups)
+
+# %% Performance metrics
+
+# Process probabilities to binary predictions
+y_pred_PR = np.where(y_pred_prob_PR > 0.5, 1, 0)
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred_PR)
+cm_df = pd.DataFrame(cm, index=['Actual Negative', 'Actual Positive'], columns=['Predicted Negative', 'Predicted Positive'])
+print(cm_df)
+
+# Performance metrics
+print(classification_report(y_test, y_pred_PR))
+
+# Compute and print ROC AUC and PR AUC
+print('ROC AUC score: {:.3f}'.format(roc_auc_score(y_test, y_pred_prob_PR)))
+print('PR AUC score: {:.3f}'.format(average_precision_score(y_test, y_pred_prob_PR)))

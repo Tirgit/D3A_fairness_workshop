@@ -105,7 +105,8 @@ y_pred = np.where(y_pred_probs > 0.5, 1, 0)
 
 # Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-print(cm)
+cm_df = pd.DataFrame(cm, index=['Actual Negative', 'Actual Positive'], columns=['Predicted Negative', 'Predicted Positive'])
+print(cm_df)
 
 # Performance metrics
 print(classification_report(y_test, y_pred))
