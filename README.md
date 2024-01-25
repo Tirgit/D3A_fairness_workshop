@@ -60,19 +60,18 @@ The *0_baseline_fairness_bias* script (and the *2_mitigation_aif360* script for 
 - Post-processing strategies are applied after the model is trained. 
 R users will focus on pre-processing and post-processing, while Python users can also explore in-processing strategies.
 
-## Groups
+## The Task
 You are divided in groups of 4-5 people. You will have 45 minutes to complete the following tasks, and we suggest that you divide the tasks between the group members and work in parallel and communicate, communicate, communicate.
 The tasks are:
 1. Record performance of baseline GLM model
 2. Try to improve the model (e.g., via feature selection, implementing more sophisticated ML approach, parameter tuning). We implemented a LightGBM algorithm, but you are free to try other algorithms. Do NOT implement any bias mitigation strategies yet, only focus on obtaining a better model.
 3. Improve the model via bias mitigation in the pre-processing stage
-4. Improve the model via bias mitigation in the in-processing stage
+4. Improve the model via bias mitigation in the in-processing stage (Python only)
 5. Improve the model via bias mitigation in the post-processing stage
 
 Record the overall performance of the model, the stratified performance of the model (men vs. women), and the fairness metric of your choice.
 
-## Discussion
-Upload results and your key learnings to:
+> Upload results and your key learnings to:
 https://docs.google.com/presentation/d/1D2Fc44sKXB3b5-tT3yvADzPGcQFUQ4AcVz6VDRiw15U/edit?usp=sharing
 
 ## How to cite code from this repository
