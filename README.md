@@ -38,17 +38,17 @@ We recommend that you start with a baseline model (GLM) in the *0_baseline_fairn
 The sensitive or protected attribute in the dataset is sex. We would like to achieve prediction models that perform equally between men and women. Many metrics exist to assess algorithmic group fairness, and the most common ones use [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) metrics. In short, the aim is usually to choose a relevant confusion matrix metric and try to equalize it in the pre-selected population subgroups - in this case, by sex. You will see that the DALEX/fairmodels pipeline that are implemented in the scripts will have a standard set of metrics that you can use to assess fairness.
 
 These metrics are: 
-- Accuracy equality ratio ((TP+TN)/(TP+TN+FP+FN))<sub>D=unprivileged</sub> / ((TP+TN)/(TP+TN+FP+FN))<sub>D=privileged</sub>
-- Equal opportunity ratio (TP/(TP+FN))<sub>D=unprivileged</sub> / (TP/(TP+FN))<sub>D=privileged</sub>
-- Predictive equality ratio (FP/(FP+TN))<sub>D=unprivileged</sub> / (FP/(FP+TN))<sub>D=privileged</sub>
-- Predictive parity ratio (TP/(TP+FP))<sub>D=unprivileged</sub> / (TP/(TP+FP))<sub>D=privileged</sub>
-- Statistical parity ratio ((TP+FP)/(TP+FP+TN+FN))<sub>D=unprivileged</sub> / ((TP+FP)/(TP+FP+TN+FN))<sub>D=privileged</sub>
+- Accuracy equality ratio [(TP+TN)/(TP+TN+FP+FN)]<sub>D=unprivileged</sub> / [(TP+TN)/(TP+TN+FP+FN)]<sub>D=privileged</sub>
+- Equal opportunity ratio [TP/(TP+FN)]<sub>D=unprivileged</sub> / [TP/(TP+FN)]<sub>D=privileged</sub>
+- Predictive equality ratio [FP/(FP+TN)]<sub>D=unprivileged</sub> / [FP/(FP+TN)]<sub>D=privileged</sub>
+- Predictive parity ratio [TP/(TP+FP)]<sub>D=unprivileged</sub> / [TP/(TP+FP)]<sub>D=privileged</sub>
+- Statistical parity ratio [(TP+FP)/(TP+FP+TN+FN)]<sub>D=unprivileged</sub> / [(TP+FP)/(TP+FP+TN+FN)]<sub>D=privileged</sub>
 
 Whereas in the AIF360 pipeline, the following metrics are available:
 
 - Statistical parity difference Pr(Y=1|D=unprivileged)−Pr(Y=1|D=privileged)
 - Equal opportunity difference TPR<sub>D=unprivileged</sub>−TPR<sub>D=privileged</sub>
-- Average odds difference 1/2[(FPR<sub>D=unprivileged</sub>−FPR<sub>D=privileged</sub>)+(TPR<sub>D=unprivileged</sub>−TPR<sub>D=privileged</sub>))]
+- Average odds difference 1/2[(FPR<sub>D=unprivileged</sub>−FPR<sub>D=privileged</sub>)+(TPR<sub>D=unprivileged</sub>−TPR<sub>D=privileged</sub>)]
 - [Theil index](https://en.wikipedia.org/wiki/Theil_index)
 
 Try to think about which metric is the most relevant for this use case.
