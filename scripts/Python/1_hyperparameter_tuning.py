@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 
 # Import metrics
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import roc_auc_score, average_precision_score
 from sklearn.model_selection import RandomizedSearchCV
 
 # Import models
@@ -43,7 +44,7 @@ X = data.drop(columns='DAY30')
 y = data.DAY30
 
 # %% Split data into train and test 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.7, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y)
 
 # Create dataset
 train_data = lgb.Dataset(X_train, label=y_train)
@@ -93,20 +94,30 @@ params.update(best_params)
 lgbm_model = lgb.train(params, train_data, 200)
 
 # %% Predict on test data
-y_pred = lgbm_model.predict(X_test)
+# Probs on train data
+y_train_pred_probs = lgbm_model.predict(X_train)
 
-# Convert probabilities to binary
-y_pred = np.where(y_pred > 0.5, 1, 0)
+# Predict on test data
+y_pred_probs = lgbm_model.predict(X_test)
+
+# Process probabilities to binary predictions
+y_pred = np.where(y_pred_probs > 0.5, 1, 0)
 
 # Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-print(cm)
+cm_df = pd.DataFrame(cm, index=['Actual Negative', 'Actual Positive'], columns=['Predicted Negative', 'Predicted Positive'])
+print(cm_df)
 
+# Performance metrics
 print(classification_report(y_test, y_pred))
+
+# Compute and print ROC AUC and PR AUC
+print('ROC AUC score: {:.3f}'.format(roc_auc_score(y_test, y_pred_probs)))
+print('PR AUC score: {:.3f}'.format(average_precision_score(y_test, y_pred_probs)))
 
 # %% Run Dalex explainer
 exp_gbm = dx.Explainer(lgbm_model, data=X_test, y=y_test, 
-                       label='gbm', 
+                       label='gbt', 
                        model_type='classification',
                        verbose=True)
 

@@ -1,7 +1,7 @@
+numpy==1.23.1
 pyarrow
 ipykernel
 pandas
-numpy
 matplotlib
 seaborn
 scikit-learn
