@@ -28,6 +28,7 @@ To work with your current installation of R (and Rstudio), uncomment the first l
 
 ```R
 install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")
+pak::pkg_install(c("skimr", "tidyverse", "tidymodels", "rsample", "lightgbm", "parsnip", "bonsai", "tune", "yardstick", "DALEX", "DALEXtra", "fairmodels", "ggplot2", "pROC", "gbm"))
 ```
 
 ## Prediction
