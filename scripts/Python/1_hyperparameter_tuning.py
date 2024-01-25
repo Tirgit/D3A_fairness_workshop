@@ -111,8 +111,8 @@ print(cm)
 print(classification_report(y_test, y_pred))
 
 # Compute and print ROC AUC and PR AUC
-print('ROC AUC score: {:.3f}'.format(roc_auc_score(y_test, y_pred_proba)))
-print('PR AUC score: {:.3f}'.format(average_precision_score(y_test, y_pred_proba)))
+print('ROC AUC score: {:.3f}'.format(roc_auc_score(y_test, y_pred_probs)))
+print('PR AUC score: {:.3f}'.format(average_precision_score(y_test, y_pred_probs)))
 
 # %% Run Dalex explainer
 exp_gbm = dx.Explainer(lgbm_model, data=X_test, y=y_test, 

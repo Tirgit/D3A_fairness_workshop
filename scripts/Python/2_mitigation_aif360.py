@@ -43,7 +43,7 @@ np.random.seed(123)
 ######################## ACCESORY FUNCTIONS ####################
 # %% Function from aif360
 
-def test_aif360(dataset, model, thresh_arr):
+def test_aif360(dataset, model, thresh_arr, unprivileged_groups, privileged_groups):
     try:
         # sklearn classifier
         y_val_pred_prob = model.predict_proba(dataset.features)
@@ -60,6 +60,7 @@ def test_aif360(dataset, model, thresh_arr):
 
         dataset_pred = dataset.copy()
         dataset_pred.labels = y_val_pred
+
         metric = ClassificationMetric(
             dataset,
             dataset_pred,
@@ -188,7 +189,7 @@ fobject_glm.fairness_check(epsilon=0.8)
 # %% Plot fairness metrics
 fobject_glm.plot()
 
-# %% ################################## FAIRNESS MITIGATION ######################################
+# %% ######################### FAIRNESS MITIGATION USING AIF360 ###########################
 
 # %% Transform and prepare data for aif360 data class
 preprocessing = preprocessor.fit_transform(X_train)
@@ -225,12 +226,12 @@ scaler = clf.named_steps["scaler"]
 dt_train.features = scaler.transform(dt_train.features)
 dt_test.features = scaler.transform(dt_test.features)
 
-# %%
-# AttributeError due to use of old numpy version
+# %% Train PR model
 PR_model = PR_model.fit(dt_train)
 
-# %%
-thresh_arr = np.linspace(0.01, 0.50, 50)
+# %% Run metrics from AIF360
 
-val_metrics = test_aif360(dataset=dt_test, model=PR_model, thresh_arr=thresh_arr)
-pr_orig_best_ind = np.argmax(val_metrics["bal_acc"])
+unprivileged_groups = [{"SEX" : 1}]
+privileged_groups = [{"SEX" : 0}]
+
+test_aif360(dt_test, PR_model, [0.5], unprivileged_groups, privileged_groups)
