@@ -44,6 +44,14 @@ These metrics are:
 - Predictive parity ratio TP/(TP+FP)
 - Statistical parity ratio (TP+FP)/(TP+FP+TN+FN)
 
+Whereas in the AIF360 pipeline, the following metrics are available:
+
+- Statistical parity difference
+- Equal opportunity difference
+- Average odds difference 1/2[(FPR<sub>D=unprivileged</sub>−FPR<sub>D=privileged</sub>)+(TPR<sub>D=unprivileged</sub>−TPR<sub>D=privileged</sub>))]
+- Disparate impact
+- [Theil index](https://en.wikipedia.org/wiki/Theil_index)
+
 Try to think about which metric is the most relevant for this use case.
 
 The *0_baseline_fairness_bias* script (and the *2_mitigation_aif360* script for Python users) contains various strategies to mitigate bias. Bias mitigation strategies can be divided into three categories: pre-processing, in-processing and post-processing. 
