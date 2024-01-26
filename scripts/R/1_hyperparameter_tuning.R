@@ -1,6 +1,6 @@
 ## Description: This script is used to create a LightGBM model with hyperparameter tuning for the health data.
 ##
-## Author: Adrian G. Zucco and Tibor V. Varga
+## Authors: Adrian G. Zucco, Alexandros Katsiferis, Tibor V. Varga
 ## Date Created: 2024-01-18
 ## Notes:
 ## Inspiration from https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels

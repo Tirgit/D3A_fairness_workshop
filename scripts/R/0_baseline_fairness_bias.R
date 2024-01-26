@@ -1,6 +1,6 @@
 ## Description: This script is used to create a baseline GLM model for the health data.
 ##
-## Author: Adrian G. Zucco and Tibor V. Varga
+## Author: Adrian G. Zucco, Alexandros Katsiferis, Tibor V. Varga
 ## Date Created: 2024-01-18
 ## Notes:
 ## Inspiration from: https://www.kaggle.com/code/athosdamiani/lightgbm-with-tidymodels
