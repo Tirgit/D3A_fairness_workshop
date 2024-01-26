@@ -134,7 +134,6 @@ exp_glm = dx.Explainer(
 # %% Performance metrics
 exp_glm.model_performance().result
 
-
 # %% Specify fairness object
 fobject_glm = exp_glm.model_fairness(protected=X_test.SEX, privileged=0)
 
@@ -146,10 +145,10 @@ fobject_glm.plot()
 
 # %% ################################## FAIRNESS MITIGATION ######################################
 
-clf_u = copy(clf)
-clf_p = copy(clf)
 
 ######### Resampling #############
+clf_u = copy(clf)
+clf_p = copy(clf)
 
 indices_uniform = dx.fairness.resample(X_train.SEX, y_train, verbose=True)
 indices_preferential = dx.fairness.resample(

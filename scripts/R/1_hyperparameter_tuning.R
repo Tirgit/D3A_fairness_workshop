@@ -100,7 +100,7 @@ resamples <- vfold_cv(train, v = 3)
 ### Define hyperparameter optimization
 training_grid <- parameters(lightgbmmodel) %>%
   finalize(train) %>%
-  grid_random(size = 20)
+  grid_random(size = 1)
 head(training_grid)
 
 
@@ -126,7 +126,8 @@ healthworkflow <- healthworkflow %>%
 # Fit model on test set
 last_fit <- last_fit(healthworkflow,
   split = split_data,
-  metrics = metric_set(roc_auc, pr_auc, brier_class, f_meas, accuracy)
+  metrics = metric_set(roc_auc, pr_auc, brier_class, f_meas, accuracy,
+                       demographic_parity, equalized_odds, predictive_parity)
 )
 
 test_preds <- collect_predictions(last_fit)
