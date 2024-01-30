@@ -73,5 +73,3 @@ Record the overall performance of the model, the stratified performance of the m
 > Upload results and your key learnings to:
 https://docs.google.com/presentation/d/1D2Fc44sKXB3b5-tT3yvADzPGcQFUQ4AcVz6VDRiw15U/edit?usp=sharing
 
-## How to cite code from this repository
-TODO: Generate Zenodo DOI for this workshop
