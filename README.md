@@ -1,5 +1,7 @@
 # D3A Conference: Algorithmic Fairness Hackathon
 
+[![DOI](https://zenodo.org/badge/744987566.svg)](https://zenodo.org/doi/10.5281/zenodo.10597935)
+
 ## Introduction
 The aim of the following exercise is to get some hands-on experience with implementing algorithmic fairness in a prediction model using a biomedical dataset. Your group will have four distinct tasks (see details below), and you will need to cleverly divide tasks to complete the exercise in time - you will have only 45 minutes! But you don't start from scratch, we have already prepared a dataset and some code to get you started. The key tasks are to assess predictive performance of models across population subgroups defined by protected attributes (sex and immigration status), and to mitigate any potential disparities that you observe.
 
